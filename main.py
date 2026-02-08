@@ -10,6 +10,55 @@ from MockLCD import CharLCD
 from typing import List
 
 
+
+
+class Action:
+    TYPE = "base"
+
+    def __init__(self, context):
+        self.context = context  # Reference to the MidiNodeDevice
+
+    def execute(self):
+        raise NotImplementedError
+
+    def to_dict(self):
+        return {
+            "type": self.TYPE,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
+
+
+class InfoAction(Action):
+    TYPE = "info"
+
+    def __init__(self, info:str, **kwargs):
+       super().__init__(**kwargs)
+       self.info = info
+
+    def execute(self):
+        self.context.show_info(self.info)
+
+
+
+
+
+
+class Controls(Enum):
+    BUTTON_1 = auto()
+    BUTTON_2 = auto()
+    BUTTON_3 = auto()
+    BUTTON_4 = auto()
+    EXP_PEDAL_1 = auto()
+    EXP_PEDAL_2 = auto()
+
+
+
+
+
+
 class DeviceState(ABC):
     def __init__(self, context):
         self.context = context  # Reference to the MidiNodeDevice
@@ -35,11 +84,14 @@ class DeviceState(ABC):
 class HomeState(DeviceState):
     def on_enter(self):
         self.context.clear_ui()
-        self.context.write_ui("LIVE MODE\r\nPress [Select] to Setup", 0, 0, True)
+        self.context.write_ui("LIVE MODE\r\n\r\n\r\nPress [Select] to Setup", 0, 0, True)
 
     def handle_event(self, event):
-        if event.type == EventType.ENCODER_SELECT:    
+        if event.type == EventType.ENCODER_SELECT:
             self.transition_to(SettingsMenuState)
+        elif event.type == EventType.INFO_MESSAGE:
+            info = event.data.get("info", "")
+            self.context.write_ui(f"INFO:\r\n{info}", 0, 1, True)
 
 class ParamAdjustState(DeviceState):
     def __init__(self, context):
@@ -179,6 +231,7 @@ class EventType(Enum):
     ENCODER_CW = auto()
     ENCODER_CCW = auto()
     ENCODER_SELECT = auto()
+    INFO_MESSAGE = auto()
 
 class DeviceEvent:
     def __init__(self, event_type: EventType, data=None):
@@ -199,6 +252,9 @@ class DisplayProvider(ABC):
         pass
 
 class MockLCD(DisplayProvider):
+    def __init__(self):
+        self.lcd = CharLCD()
+
     def clear(self):
         self.lcd.clear()
 
@@ -214,12 +270,13 @@ class MockLCD(DisplayProvider):
 
 class InputManager(threading.Thread):
     """Monitors GPIO pins and puts events into the queue."""
-    def __init__(self, event_queue: queue.Queue, shutdown_event: threading.Event):
+    def __init__(self, event_queue: queue.Queue, shutdown_event: threading.Event, actions: dict[Controls, Action]):
         super().__init__(daemon=True)
         self.queue = event_queue
         self.shutdown = shutdown_event
         self.input_handler = KeyboardInputManager()
-        
+        self.actions = actions
+
         def encoder_callback(direction):
             if direction == 1:
                 self.queue.put(DeviceEvent(EventType.ENCODER_CW))
@@ -228,6 +285,16 @@ class InputManager(threading.Thread):
 
         self.input_handler.add_encoder('down', "up", encoder_callback)
         self.input_handler.add_button('enter', {ButtonEvent.PRESS: lambda: self.queue.put(DeviceEvent(EventType.ENCODER_SELECT))})
+
+        key_map = {
+            Controls.BUTTON_1: '1',
+            Controls.BUTTON_2: '2',
+            Controls.BUTTON_3: '3',
+            Controls.BUTTON_4: '4',
+        }
+        for control, action in actions.items():
+            if control in key_map.keys():
+                self.input_handler.add_button(key_map[control], {ButtonEvent.PRESS: (lambda c=control: actions[c].execute())})
 
     def run(self):
         logging.info("Input Thread Started")
@@ -273,16 +340,26 @@ class MidiNodeDevice:
         # logging.basicConfig(level=logging.INFO, format='%(threadName)s: %(message)s')
         logging.basicConfig(level=logging.ERROR, format='%(threadName)s: %(message)s')
         
+        # Event Queues and Shutdown Event
         self.event_queue = queue.Queue()
         self.ui_queue = queue.Queue()
         self.shutdown_event = threading.Event()
+
+        self.actions = {
+            Controls.BUTTON_1: InfoAction(info="Button 1 Pressed", context=self),
+            Controls.BUTTON_2: InfoAction(info="Button 2 Pressed", context=self),
+            Controls.BUTTON_3: InfoAction(info="Button 3 Pressed", context=self),
+            Controls.BUTTON_4: InfoAction(info="Button 4 Pressed", context=self),
+            Controls.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=self),
+            Controls.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=self),
+        }
 
         # Initialize Hardware
         self.lcd = MockLCD()
         self.lcd.clear()
 
         # Initialize Threads
-        self.input_thread = InputManager(self.event_queue, self.shutdown_event)
+        self.input_thread = InputManager(self.event_queue, self.shutdown_event, self.actions)
         self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
         
         # Start in the Home State
@@ -290,6 +367,13 @@ class MidiNodeDevice:
         self.push_state(HomeState(self))
 
     
+    # Action Helpers
+
+    def show_info(self, info: str):
+        """Display an informational message"""
+        self.event_queue.put(DeviceEvent(EventType.INFO_MESSAGE, data={"info": info}))
+
+
     # State Management
 
     @property
