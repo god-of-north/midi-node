@@ -10,10 +10,21 @@ from MockLCD import CharLCD
 from typing import List
 
 
+ACTION_REGISTRY = {}
 
+def register_action(cls):
+    action_type = getattr(cls, 'TYPE', cls.__name__)
+    title = getattr(cls, 'TITLE', action_type)
+
+    ACTION_REGISTRY[action_type] = {
+        "class": cls,
+        "title": title,
+    }
+    return cls
 
 class Action:
     TYPE = "base"
+    TITLE = "Base Action"
 
     def __init__(self, context):
         self.context = context  # Reference to the MidiNodeDevice
@@ -30,9 +41,10 @@ class Action:
     def from_dict(cls, data):
         return cls(**data)
 
-
+@register_action
 class InfoAction(Action):
     TYPE = "info"
+    TITLE = "Show Info"
 
     def __init__(self, info:str, **kwargs):
        super().__init__(**kwargs)
@@ -41,10 +53,10 @@ class InfoAction(Action):
     def execute(self):
         self.context.show_info(self.info)
 
-
-
-
-
+    def to_dict(self):
+        data = super().to_dict()
+        return {**data, "info": self.info}
+    
 
 class Controls(Enum):
     BUTTON_1 = auto()
@@ -73,9 +85,9 @@ class DeviceState(ABC):
         """Logic for input events while in this state."""
         pass
 
-    def transition_to(self, new_state_class):
+    def transition_to(self, new_state_class, **kwargs):
         """Helper to switch states."""
-        self.context.push_state(new_state_class(self.context))
+        self.context.push_state(new_state_class(self.context, **kwargs))
 
     def return_to_previous(self):
         """Helper to go back to the previous state."""
@@ -91,7 +103,7 @@ class HomeState(DeviceState):
             self.transition_to(SettingsMenuState)
         elif event.type == EventType.INFO_MESSAGE:
             info = event.data.get("info", "")
-            self.context.write_ui(f"INFO:\r\n{info}", 0, 1, True)
+            self.context.write_ui(f"[{info}]".center(20), 0, 1, True)
 
 class ParamAdjustState(DeviceState):
     def __init__(self, context):
@@ -195,28 +207,73 @@ class MenuState(DeviceState):
         """
         return self.items[self.selected_index]
 
+class DummyState(DeviceState):
+    def on_enter(self):
+        self.context.clear_ui()
+        self.context.write_ui("DUMMY STATE\r\nNo Actions", 0, 0, True)
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            self.return_to_previous()
+
+class ButtonSettingsMenuState(MenuState):
+    def __init__(self, context, button_id):
+        super().__init__(context)
+        self.button_id = button_id
+
+        action = context.actions.get(button_id, None)
+        if not action:
+            # TODO transition to action creation page
+            self.return_to_previous()
+
+        params = action.to_dict()
+        params.pop("type")
+
+        self.transitions = {}
+        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = transition = {"class": DummyState}
+        for key, value in params.items():
+            transition = {"class": DummyState}
+            self.transitions[f"{key.capitalize()}: {value}"] = transition
+        self.transitions["Delete"] = transition = {"class": DummyState}
+        self.transitions["Back to Settings"] = None
+        self.items = list(self.transitions.keys())
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            new_state = self.transitions[selected]
+            if new_state is not None:
+                self.transition_to(new_state["class"], **new_state.get("args", {}))
+            else:
+                self.return_to_previous()
+        else:
+            super().handle_event(event)
+
 class SettingsMenuState(MenuState):
     def __init__(self, context):
         super().__init__(context)
 
         self.transitions = {
-            "Setup Button 1": ParamAdjustState,
-            "Setup Button 2": ParamAdjustState,
-            "Setup Button 3": ParamAdjustState,
-            "Setup Button 4": ParamAdjustState,
-            "Setup Exp Pedal 1": ParamAdjustState,
-            "Setup Exp Pedal 2": ParamAdjustState,
-            "Delete Preset": ParamAdjustState,
-            "Clone Preset": ParamAdjustState,
-            "Back to Live Mode": HomeState
+            "Setup Button 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_1}},
+            "Setup Button 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_2}},
+            "Setup Button 3": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_3}},
+            "Setup Button 4": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_4}},
+            "Setup Exp Pedal 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.EXP_PEDAL_1}},
+            "Setup Exp Pedal 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.EXP_PEDAL_2}},
+            "Delete Preset": {"class": DummyState},
+            "Clone Preset": {"class": DummyState},
+            "Back to Live Mode": None
         }
         self.items = list(self.transitions.keys())
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:
             selected = self._get_selected()
-            new_state_class = self.transitions[selected]
-            self.transition_to(new_state_class)
+            new_state = self.transitions[selected]
+            if new_state is not None:
+                self.transition_to(new_state["class"], **new_state.get("args", {}))
+            else:
+                self.return_to_previous()
         else:
             super().handle_event(event)
 
