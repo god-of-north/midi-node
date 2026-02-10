@@ -22,12 +22,22 @@ def register_action(cls):
     }
     return cls
 
+class ActionParam:
+    def __init__(self, name: str, param_type: type, value, default=None, options:dict={}):
+        self.name = name
+        self.param_type = param_type
+        self.value = value
+        self.default = default
+        self.options = options or {}
+
 class Action:
     TYPE = "base"
     TITLE = "Base Action"
 
     def __init__(self, context):
         self.context = context  # Reference to the MidiNodeDevice
+
+        self.params: dict[str, ActionParam] = {}
 
     def execute(self):
         raise NotImplementedError
@@ -47,16 +57,48 @@ class InfoAction(Action):
     TITLE = "Show Info"
 
     def __init__(self, info:str, **kwargs):
-       super().__init__(**kwargs)
-       self.info = info
+        super().__init__(**kwargs)
+        self.params["info"] = ActionParam("info", str, info)
 
     def execute(self):
-        self.context.show_info(self.info)
+        self.context.show_info(self.params["info"].value)
 
     def to_dict(self):
         data = super().to_dict()
-        return {**data, "info": self.info}
-    
+        return {**data, "info": self.params["info"].value}
+
+@register_action
+class CCAction(Action):
+    TYPE = "cc"
+    TITLE = "Send CC"
+
+    def __init__(self, cc:int, **kwargs):
+        super().__init__(**kwargs)
+        self.params["cc"] = ActionParam("cc", int, cc, default=127, options={"min_value":0, "max_value":127})
+
+    def execute(self):
+        self.context.show_info(self.params["cc"].value)
+
+    def to_dict(self):
+        data = super().to_dict()
+        return {**data, "cc": self.params["cc"].value}
+
+@register_action
+class PCAction(Action):
+    TYPE = "pc"
+    TITLE = "Send PC"
+
+    def __init__(self, pc:int, **kwargs):
+        super().__init__(**kwargs)
+        self.params["pc"] = ActionParam("pc", int, pc, default=0, options={"min_value":0, "max_value":127})
+
+    def execute(self):
+        self.context.show_info(self.params["pc"].value)
+
+    def to_dict(self):
+        data = super().to_dict()
+        return {**data, "pc": self.params["pc"].value}
+
 
 class Controls(Enum):
     BUTTON_1 = auto()
@@ -216,6 +258,95 @@ class DummyState(DeviceState):
         if event.type == EventType.ENCODER_SELECT:
             self.return_to_previous()
 
+class IntNumberSelectorState(DeviceState):
+    LINE_WIDTH = 20
+
+    def __init__(
+        self,
+        context,
+        min_value: int,
+        max_value: int,
+        header: str = "Integer Selector"
+    ):
+        super().__init__(context)
+
+        self.min_value = min_value
+        self.max_value = max_value
+        self.header = header
+
+        self.origin_x = 0
+        self.origin_y = 0
+
+        self.value = min_value
+
+        # Pre-calc width for zero-padded numbers (optional but nice)
+        self._num_width = len(str(max(abs(min_value), abs(max_value))))
+
+
+    def on_enter(self):
+        self.context.clear_ui()
+        self._refresh_display()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_CW:
+            self._next()
+        elif event.type == EventType.ENCODER_CCW:
+            self._prev()
+        elif event.type == EventType.ENCODER_SELECT:
+            self.return_to_previous()
+
+    def _refresh_display(self) -> None:
+        """
+        Draw header and current integer value.
+        """
+        # Header
+        self.context.write_ui(self.header.ljust(self.LINE_WIDTH), self.origin_x, self.origin_y, True)
+
+        # Value line
+        formatted = self._format_value(self.value)
+        value_line = f"< {formatted} >".center(self.LINE_WIDTH)
+
+        self.context.write_ui(value_line[:self.LINE_WIDTH], self.origin_x, self.origin_y + 1, True)
+
+        # Clear remaining lines
+        for i in range(2, 4):
+            self.context.write_ui(" " * self.LINE_WIDTH, self.origin_x, self.origin_y + i, True)
+
+    def _next(self) -> None:
+        """
+        Increment value by 1 (cyclic).
+        """
+        if self.value >= self.max_value:
+            self.value = self.min_value
+        else:
+            self.value += 1
+
+        self._refresh_display()
+
+    def _prev(self) -> None:
+        """
+        Decrement value by 1 (cyclic).
+        """
+        if self.value <= self.min_value:
+            self.value = self.max_value
+        else:
+            self.value -= 1
+
+        self._refresh_display()
+
+    def get_value(self) -> int:
+        """
+        Return current integer value.
+        """
+        return self.value
+
+    def _format_value(self, value: int) -> str:
+        """
+        Format value for display (zero-padded).
+        """
+        sign = "-" if value < 0 else ""
+        return f"{sign}{abs(value):0{self._num_width}d}"
+
 class ButtonSettingsMenuState(MenuState):
     def __init__(self, context, button_id):
         super().__init__(context)
@@ -226,14 +357,22 @@ class ButtonSettingsMenuState(MenuState):
             # TODO transition to action creation page
             self.return_to_previous()
 
-        params = action.to_dict()
-        params.pop("type")
+        params = action.params
 
         self.transitions = {}
         self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = transition = {"class": DummyState}
-        for key, value in params.items():
+        for key, param in params.items():
             transition = {"class": DummyState}
-            self.transitions[f"{key.capitalize()}: {value}"] = transition
+            if param.param_type == bool:
+                transition = {"class": DummyState}
+            elif param.param_type == int:
+                transition = {"class": IntNumberSelectorState, "args": {**param.options}}
+            elif param.param_type == str:
+                transition = {"class": DummyState}
+            elif param.param_type == Enum:
+                transition = {"class": DummyState}
+
+            self.transitions[f"{key.capitalize()}: {param.value}"] = transition
         self.transitions["Delete"] = transition = {"class": DummyState}
         self.transitions["Back to Settings"] = None
         self.items = list(self.transitions.keys())
@@ -406,7 +545,7 @@ class MidiNodeDevice:
             Controls.BUTTON_1: InfoAction(info="Button 1 Pressed", context=self),
             Controls.BUTTON_2: InfoAction(info="Button 2 Pressed", context=self),
             Controls.BUTTON_3: InfoAction(info="Button 3 Pressed", context=self),
-            Controls.BUTTON_4: InfoAction(info="Button 4 Pressed", context=self),
+            Controls.BUTTON_4: CCAction(cc=100, context=self),
             Controls.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=self),
             Controls.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=self),
         }
