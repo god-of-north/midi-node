@@ -74,7 +74,7 @@ class CCAction(Action):
 
     def __init__(self, cc:int, **kwargs):
         super().__init__(**kwargs)
-        self.params["cc"] = ActionParam("cc", int, cc, default=127, options={"min_value":0, "max_value":127})
+        self.params["cc"] = ActionParam("cc", int, cc, default=127, options={"min_value":0, "max_value":127, "header":"Control Change"})
 
     def execute(self):
         self.context.show_info(self.params["cc"].value)
@@ -90,7 +90,7 @@ class PCAction(Action):
 
     def __init__(self, pc:int, **kwargs):
         super().__init__(**kwargs)
-        self.params["pc"] = ActionParam("pc", int, pc, default=0, options={"min_value":0, "max_value":127})
+        self.params["pc"] = ActionParam("pc", int, pc, default=0, options={"min_value":0, "max_value":127, "header":"Program Change"})
 
     def execute(self):
         self.context.show_info(self.params["pc"].value)
@@ -264,8 +264,9 @@ class IntNumberSelectorState(DeviceState):
     def __init__(
         self,
         context,
-        min_value: int,
-        max_value: int,
+        min_value: int = 0,
+        max_value: int = 100,
+        value: int = 0,
         header: str = "Integer Selector"
     ):
         super().__init__(context)
@@ -277,7 +278,7 @@ class IntNumberSelectorState(DeviceState):
         self.origin_x = 0
         self.origin_y = 0
 
-        self.value = min_value
+        self.value = value
 
         # Pre-calc width for zero-padded numbers (optional but nice)
         self._num_width = len(str(max(abs(min_value), abs(max_value))))
@@ -347,6 +348,130 @@ class IntNumberSelectorState(DeviceState):
         sign = "-" if value < 0 else ""
         return f"{sign}{abs(value):0{self._num_width}d}"
 
+class StringCreatorState(DeviceState):
+    VISIBLE_WIDTH = 20
+
+    def __init__(
+        self,
+        context,
+        value: str = "",
+        characters: str = "_ ABCDEFGHIJKLMNOPQRSTUVWXYZ_ abcdefghijklmnopqrstuvwxyz _0123456789 _",
+        header: str = "Create String:",
+        centered: bool = True,
+    ):
+        super().__init__(context)
+
+        self.origin_x = 0
+        self.origin_y = 0
+        self.centered = centered
+        self.characters: List[str] = list("√←" + characters)
+        self.selected_index = 0
+        self.scroll_offset = 0
+        self.header = header
+
+        self.chars: List[str] = list(value)
+
+    def on_enter(self):
+        self.context.clear_ui()
+        self._refresh_display()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_CW:
+            self._next()
+        elif event.type == EventType.ENCODER_CCW:
+            self._prev()
+        elif event.type == EventType.ENCODER_SELECT:
+            if self._get_selected() == "√":
+                self.return_to_previous()
+            elif self._get_selected() == "←":
+                self._backspace()
+            else:
+                self._add_char()
+
+    def _refresh_display(self) -> None:
+        # Header
+        self.context.write_ui(self.header.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y, True)
+
+        # Characters line
+        visible_chars = self._get_visible_chars()
+        self.context.write_ui("".join(visible_chars).ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 1, True)
+
+        # Cursor line
+        cursor_x = self.selected_index - self.scroll_offset
+        cursor_line = " " * cursor_x + "^"
+        self.context.write_ui(cursor_line.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 2, True)
+
+        # Draw the current string.
+        current_string = "".join(self.chars)
+
+        if self.centered:
+            self.context.write_ui(current_string.center(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 3, True)
+        else:
+            self.context.write_ui(current_string.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 3, True)
+
+    def _add_char(self) -> None:
+        """
+        Add currently selected character to the string.
+        """
+        selected_char = self._get_selected()
+        self.chars.append(selected_char)
+        self._refresh_display()
+
+    def _backspace(self) -> None:
+        """
+        Remove last character from the string.
+        """
+        if not self.chars:
+            return
+
+        self.chars.pop()
+        self._refresh_display()
+
+    def _get_string(self) -> str:
+        """
+        Return the current string.
+        """
+        return "".join(self.chars)
+    
+    def _next(self) -> None:
+        """
+        Move cursor right. Scroll if needed.
+        """
+        if self.selected_index >= len(self.characters) - 1:
+            return
+
+        self.selected_index += 1
+
+        if self.selected_index >= self.scroll_offset + self.VISIBLE_WIDTH:
+            self.scroll_offset += 1
+
+        self._refresh_display()
+
+    def _prev(self) -> None:
+        """
+        Move cursor left. Scroll if needed.
+        """
+        if self.selected_index <= 0:
+            return
+
+        self.selected_index -= 1
+
+        if self.selected_index < self.scroll_offset:
+            self.scroll_offset -= 1
+
+        self._refresh_display()
+
+    def _get_selected(self) -> str:
+        """
+        Return currently selected character.
+        """
+        return self.characters[self.selected_index]
+
+    def _get_visible_chars(self) -> List[str]:
+        end = self.scroll_offset + self.VISIBLE_WIDTH
+        return self.characters[self.scroll_offset:end]
+
+
 class ButtonSettingsMenuState(MenuState):
     def __init__(self, context, button_id):
         super().__init__(context)
@@ -366,9 +491,9 @@ class ButtonSettingsMenuState(MenuState):
             if param.param_type == bool:
                 transition = {"class": DummyState}
             elif param.param_type == int:
-                transition = {"class": IntNumberSelectorState, "args": {**param.options}}
+                transition = {"class": IntNumberSelectorState, "args": {**param.options, "value":param.value}}
             elif param.param_type == str:
-                transition = {"class": DummyState}
+                transition = {"class": StringCreatorState, "args": {**param.options, "value":param.value}}
             elif param.param_type == Enum:
                 transition = {"class": DummyState}
 
