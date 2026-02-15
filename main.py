@@ -147,28 +147,6 @@ class HomeState(DeviceState):
             info = event.data.get("info", "")
             self.context.write_ui(f"[{info}]".center(20), 0, 1, True)
 
-class ParamAdjustState(DeviceState):
-    def __init__(self, context):
-        super().__init__(context)
-        self.param = 50
-
-    def on_enter(self):
-        self.context.clear_ui()
-        self._refresh_display()
-
-    def _refresh_display(self):
-        self.context.write_ui(f"PARAM CONTROL\r\nLevel: {self.param}%", 0, 0, True)
-
-    def handle_event(self, event):
-        if event.type == EventType.ENCODER_CW:
-            self.param = min(100, self.param + 5)
-            self._refresh_display()
-        elif event.type == EventType.ENCODER_CCW:
-            self.param = max(0, self.param - 5)
-            self._refresh_display()
-        elif event.type == EventType.ENCODER_SELECT:
-            self.return_to_previous()
-
 class MenuState(DeviceState):
     MAX_LINES = 4
 
@@ -348,6 +326,25 @@ class IntNumberSelectorState(DeviceState):
         sign = "-" if value < 0 else ""
         return f"{sign}{abs(value):0{self._num_width}d}"
 
+class ActionParamIntSelectorState(IntNumberSelectorState):
+    def __init__(self, context, param: ActionParam):
+        if not param or param.param_type != int:
+            raise ValueError(f"Parameter '{param.name}' is not a valid integer parameter.")
+
+        super().__init__(
+            context,
+            min_value=param.options.get("min_value", 0),
+            max_value=param.options.get("max_value", 100),
+            value=param.value,
+            header=param.options.get("header", f"Set {param.name.capitalize()}:")
+        )
+        self.param = param
+
+    def return_to_previous(self):
+        # Update the action parameter before returning
+        self.param.value = self.get_value()
+        super().return_to_previous()   
+
 class StringCreatorState(DeviceState):
     VISIBLE_WIDTH = 20
 
@@ -471,13 +468,32 @@ class StringCreatorState(DeviceState):
         end = self.scroll_offset + self.VISIBLE_WIDTH
         return self.characters[self.scroll_offset:end]
 
+class ActionParamStringSelectorState(StringCreatorState):
+    def __init__(self, context, param: ActionParam):
+        if not param or param.param_type != str:
+            raise ValueError(f"Parameter '{param.name}' is not a valid string parameter.")
+
+        super().__init__(
+            context,
+            value=param.value,
+            characters=param.options.get("characters", "_ ABCDEFGHIJKLMNOPQRSTUVWXYZ_ abcdefghijklmnopqrstuvwxyz _0123456789 _"),
+            header=param.options.get("header", f"Set {param.name.capitalize()}:"),
+            centered=param.options.get("centered", True),
+        )
+        self.param = param
+
+    def return_to_previous(self):
+        # Update the action parameter before returning
+        self.param.value = self._get_string()
+        super().return_to_previous()
 
 class ButtonSettingsMenuState(MenuState):
     def __init__(self, context, button_id):
         super().__init__(context)
         self.button_id = button_id
 
-        action = context.actions.get(button_id, None)
+    def on_enter(self):
+        action = self.context.actions.get(self.button_id, None)
         if not action:
             # TODO transition to action creation page
             self.return_to_previous()
@@ -491,9 +507,9 @@ class ButtonSettingsMenuState(MenuState):
             if param.param_type == bool:
                 transition = {"class": DummyState}
             elif param.param_type == int:
-                transition = {"class": IntNumberSelectorState, "args": {**param.options, "value":param.value}}
+                transition = {"class": ActionParamIntSelectorState, "args": {"param":param}}
             elif param.param_type == str:
-                transition = {"class": StringCreatorState, "args": {**param.options, "value":param.value}}
+                transition = {"class": ActionParamStringSelectorState, "args": {"param":param}}
             elif param.param_type == Enum:
                 transition = {"class": DummyState}
 
@@ -501,6 +517,8 @@ class ButtonSettingsMenuState(MenuState):
         self.transitions["Delete"] = transition = {"class": DummyState}
         self.transitions["Back to Settings"] = None
         self.items = list(self.transitions.keys())
+
+        super().on_enter()
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:
