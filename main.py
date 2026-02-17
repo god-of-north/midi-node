@@ -487,6 +487,101 @@ class ActionParamStringSelectorState(StringCreatorState):
         self.param.value = self._get_string()
         super().return_to_previous()
 
+class BooleanSelectorState(MenuState):
+    def __init__(self, context, value:bool, true_value:str="True", false_value:str="False"):
+        super().__init__(context)
+        self.true_value = true_value
+        self.false_value = false_value
+        self.selected_value = value
+
+        self.transitions = {}
+        self.transitions[self.true_value] = True
+        self.transitions[self.false_value] = False
+        self.items = list(self.transitions.keys())
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            self.selected_value = self.transitions[selected]
+            self.return_to_previous()
+        else:
+            super().handle_event(event)
+    
+    def get_value(self) -> bool:
+        return self.selected_value
+    
+class ActionParamBoolSelectorState(BooleanSelectorState):
+    def __init__(self, context, param: ActionParam):
+        if not param or param.param_type != bool:
+            raise ValueError(f"Parameter '{param.name}' is not a valid boolean parameter.")
+
+        super().__init__(
+            context,
+            value=param.value,
+            true_value=param.options.get("true_value", "True"),
+            false_value=param.options.get("false_value", "False"),
+        )
+        self.param = param
+
+    def return_to_previous(self):
+        # Update the action parameter before returning
+        self.param.value = self.get_value()
+        super().return_to_previous()
+
+class EnumSelectorState(MenuState):
+    def __init__(self, context, enum_type: type[Enum], value: Enum):
+        super().__init__(context)
+        self.enum_type = enum_type
+        self.selected_value = value
+
+        self.transitions = {}
+        for member in enum_type:
+            self.transitions[member.name] = member
+        self.items = list(self.transitions.keys())
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            self.selected_value = self.transitions[selected]
+            self.return_to_previous()
+        else:
+            super().handle_event(event)
+    
+    def get_value(self) -> Enum:
+        return self.selected_value
+
+class ActionParamEnumSelectorState(EnumSelectorState):
+    def __init__(self, context, param: ActionParam):
+        if not param or not issubclass(param.param_type, Enum):
+            raise ValueError(f"Parameter '{param.name}' is not a valid enum parameter.")
+
+        super().__init__(
+            context,
+            enum_type=param.param_type,
+            value=param.value,
+        )
+        self.param = param
+
+class ActionSelectorState(MenuState):
+    def __init__(self, context):
+        super().__init__(context)
+
+        self.transitions = {}
+        for action_type, action_info in ACTION_REGISTRY.items():
+            self.transitions[action_info["title"]] = {"class": DummyState}
+        self.items = list(self.transitions.keys())
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            new_state = self.transitions[selected]
+            if new_state is not None:
+                self.transition_to(new_state["class"], **new_state.get("args", {}))
+            else:
+                self.return_to_previous()
+        else:
+            super().handle_event(event)
+
 class ButtonSettingsMenuState(MenuState):
     def __init__(self, context, button_id):
         super().__init__(context)
@@ -501,17 +596,17 @@ class ButtonSettingsMenuState(MenuState):
         params = action.params
 
         self.transitions = {}
-        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = transition = {"class": DummyState}
+        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState}
         for key, param in params.items():
             transition = {"class": DummyState}
             if param.param_type == bool:
-                transition = {"class": DummyState}
+                transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}
             elif param.param_type == int:
                 transition = {"class": ActionParamIntSelectorState, "args": {"param":param}}
             elif param.param_type == str:
                 transition = {"class": ActionParamStringSelectorState, "args": {"param":param}}
-            elif param.param_type == Enum:
-                transition = {"class": DummyState}
+            elif issubclass(param.param_type, Enum):
+                transition = {"class": ActionParamEnumSelectorState, "args": {"param":param}}
 
             self.transitions[f"{key.capitalize()}: {param.value}"] = transition
         self.transitions["Delete"] = transition = {"class": DummyState}
