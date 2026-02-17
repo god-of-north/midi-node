@@ -56,7 +56,7 @@ class InfoAction(Action):
     TYPE = "info"
     TITLE = "Show Info"
 
-    def __init__(self, info:str, **kwargs):
+    def __init__(self, info:str = "Info", **kwargs):
         super().__init__(**kwargs)
         self.params["info"] = ActionParam("info", str, info)
 
@@ -72,7 +72,7 @@ class CCAction(Action):
     TYPE = "cc"
     TITLE = "Send CC"
 
-    def __init__(self, cc:int, **kwargs):
+    def __init__(self, cc:int = 127, **kwargs):
         super().__init__(**kwargs)
         self.params["cc"] = ActionParam("cc", int, cc, default=127, options={"min_value":0, "max_value":127, "header":"Control Change"})
 
@@ -88,7 +88,7 @@ class PCAction(Action):
     TYPE = "pc"
     TITLE = "Send PC"
 
-    def __init__(self, pc:int, **kwargs):
+    def __init__(self, pc:int = 0, **kwargs):
         super().__init__(**kwargs)
         self.params["pc"] = ActionParam("pc", int, pc, default=0, options={"min_value":0, "max_value":127, "header":"Program Change"})
 
@@ -563,22 +563,26 @@ class ActionParamEnumSelectorState(EnumSelectorState):
         self.param = param
 
 class ActionSelectorState(MenuState):
-    def __init__(self, context):
+    def __init__(self, context, button_id):
         super().__init__(context)
 
-        self.transitions = {}
+        self.button_id = button_id
+        self.action_types = {}
         for action_type, action_info in ACTION_REGISTRY.items():
-            self.transitions[action_info["title"]] = {"class": DummyState}
-        self.items = list(self.transitions.keys())
+            self.action_types[action_info["title"]] = action_info
+        self.items = list(self.action_types.keys())
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:
             selected = self._get_selected()
-            new_state = self.transitions[selected]
-            if new_state is not None:
-                self.transition_to(new_state["class"], **new_state.get("args", {}))
-            else:
-                self.return_to_previous()
+            new_action_type = self.action_types[selected]
+            
+            existing_action = self.context.actions.get(self.button_id, None)
+            if not existing_action or existing_action.__class__ != new_action_type["class"]:
+                # Create new action
+                self.context.actions[self.button_id] = new_action_type["class"](context=self.context)
+
+            self.return_to_previous()
         else:
             super().handle_event(event)
 
@@ -596,7 +600,7 @@ class ButtonSettingsMenuState(MenuState):
         params = action.params
 
         self.transitions = {}
-        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState}
+        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState, "args": {"button_id": self.button_id}}
         for key, param in params.items():
             transition = {"class": DummyState}
             if param.param_type == bool:
