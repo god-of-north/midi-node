@@ -50,6 +50,9 @@ class Action:
     @classmethod
     def from_dict(cls, data):
         return cls(**data)
+    
+    def __str__(self):
+        return self.TITLE
 
 @register_action
 class InfoAction(Action):
@@ -66,7 +69,7 @@ class InfoAction(Action):
     def to_dict(self):
         data = super().to_dict()
         return {**data, "info": self.params["info"].value}
-
+    
 @register_action
 class CCAction(Action):
     TYPE = "cc"
@@ -99,6 +102,34 @@ class PCAction(Action):
         data = super().to_dict()
         return {**data, "pc": self.params["pc"].value}
 
+@register_action
+class CompositeAction(Action):
+    TYPE = "composite"
+    TITLE = "Composite Action"
+
+    def __init__(self, actions:List[Action]=[], **kwargs):
+        super().__init__(**kwargs)
+        self.params["actions"] = ActionParam("actions", list, actions, default=[], 
+                                             options={"class_type": Action, 
+                                                      "creator_func": self.create_action_by_type, 
+                                                      "creator_items_func": self.get_creator_items})
+
+    def execute(self):
+        for action in self.params["actions"].value:
+            action.execute()
+
+    def to_dict(self):
+        data = super().to_dict()
+        return {**data, "actions": [action.to_dict() for action in self.params["actions"].value]}
+    
+    def get_creator_items(self):
+        return list(ACTION_REGISTRY.keys())
+    
+    def create_action_by_type(self, action_type:str):
+        action_info = ACTION_REGISTRY.get(action_type, None)
+        if action_info:
+            return action_info["class"](context=self.context)
+        return None
 
 class Controls(Enum):
     BUTTON_1 = auto()
@@ -131,9 +162,9 @@ class DeviceState(ABC):
         """Helper to switch states."""
         self.context.push_state(new_state_class(self.context, **kwargs))
 
-    def return_to_previous(self):
+    def return_to_previous(self, deep: int = 1):
         """Helper to go back to the previous state."""
-        self.context.pop_state()
+        self.context.pop_state(deep)
 
 class HomeState(DeviceState):
     def on_enter(self):
@@ -150,10 +181,10 @@ class HomeState(DeviceState):
 class MenuState(DeviceState):
     MAX_LINES = 4
 
-    def __init__(self, context):
+    def __init__(self, context, items:List[str]=None):
         super().__init__(context)
 
-        self.items = ["Back"]
+        self.items = items or ["Back"]
 
         self.origin_x = 0
         self.origin_y = 0
@@ -586,23 +617,90 @@ class ActionSelectorState(MenuState):
         else:
             super().handle_event(event)
 
-class ButtonSettingsMenuState(MenuState):
-    def __init__(self, context, button_id):
+class BooleanWithCallbackState(BooleanSelectorState):
+    def __init__(self, context, value:bool, callback, true_value:str="True", false_value:str="False"):
+        super().__init__(context, value, true_value, false_value)
+        self.callback = callback
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            self.selected_value = self.transitions[selected]
+            if self.selected_value:
+                self.callback(True)
+            else:
+                self.callback(False)
+            self.return_to_previous()
+        else:
+            super().handle_event(event)
+
+class ListItemCreatorState(MenuState):
+    def __init__(self, context, items, item_add_func):
+        super().__init__(context, items)
+        self.item_add_func = item_add_func
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            self.item_add_func(selected)
+            self.return_to_previous()
+        else:
+            super().handle_event(event)
+
+class ActionParamListEditorState(MenuState):
+    def __init__(self, context, param: ActionParam):
+        if not param or param.param_type != list:
+            raise ValueError(f"Parameter '{param.name}' is not a valid list parameter.")
+
         super().__init__(context)
-        self.button_id = button_id
+        self.param = param
+        self.creator_items = param.options.get("creator_items_func")() if "creator_items_func" in param.options else []
+        self.creator_func = param.options.get("creator_func") if "creator_func" in param.options else None
 
     def on_enter(self):
-        action = self.context.actions.get(self.button_id, None)
-        if not action:
-            # TODO transition to action creation page
-            self.return_to_previous()
+        self.transitions = {}
+        for idx, item in enumerate(self.param.value):
+            self.transitions[f"{idx+1}:{item.__str__()}"] = {"class": ActionEditorState, "args": {"action": item, "delete_callback": lambda i=item: self.param.value.remove(i)}}
+        self.transitions["Add Item"] = {"class": ListItemCreatorState, "args": {"items": self.creator_items, "item_add_func": self._add_item}}
+        self.transitions["Back"] = None
+        self.items = list(self.transitions.keys())
 
-        params = action.params
+        super().on_enter()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            new_state = self.transitions[selected]
+            if new_state is not None:
+                self.transition_to(new_state["class"], **new_state.get("args", {}))
+            else:
+                self.return_to_previous()
+        else:
+            super().handle_event(event)
+
+    def _add_item(self, item_type:str):
+        if self.creator_func:
+            new_item = self.creator_func(item_type)
+            if new_item:
+                self.param.value.append(new_item)
+
+class ActionEditorState(MenuState):
+    def __init__(self, context, action: Action, delete_callback=None):
+        super().__init__(context)
+        self.action = action
+        self.delete_callback = delete_callback
+
+    def on_enter(self):
+        if not self.action:
+            self.return_to_previous()
+            return
+
+        params = self.action.params
 
         self.transitions = {}
-        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState, "args": {"button_id": self.button_id}}
         for key, param in params.items():
             transition = {"class": DummyState}
+            display_value = param.value
             if param.param_type == bool:
                 transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}
             elif param.param_type == int:
@@ -611,9 +709,69 @@ class ButtonSettingsMenuState(MenuState):
                 transition = {"class": ActionParamStringSelectorState, "args": {"param":param}}
             elif issubclass(param.param_type, Enum):
                 transition = {"class": ActionParamEnumSelectorState, "args": {"param":param}}
+            elif param.param_type == list:
+                display_value = "[]"
+                transition = {"class": ActionParamListEditorState, "args": {"param":param}}
 
-            self.transitions[f"{key.capitalize()}: {param.value}"] = transition
-        self.transitions["Delete"] = transition = {"class": DummyState}
+            self.transitions[f"{key.capitalize()}: {display_value}"] = transition
+        self.transitions["Delete"] = transition = {"class": BooleanWithCallbackState, "args": {"value": False, "callback": self._delete, "true_value": "Confirm Delete", "false_value": "Cancel"}}
+        self.transitions["Back to Settings"] = None
+        self.items = list(self.transitions.keys())
+
+        super().on_enter()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            new_state = self.transitions[selected]
+            if new_state is not None:
+                self.transition_to(new_state["class"], **new_state.get("args", {}))
+            else:
+                self.return_to_previous()
+        else:
+            super().handle_event(event)
+
+    def _delete(self, confirmed: bool):
+        if confirmed:
+            self.delete_callback()
+            self.action = None
+
+class ButtonSettingsMenuState(MenuState):
+    def __init__(self, context, button_id):
+        super().__init__(context)
+        self.button_id = button_id
+
+    def on_enter(self):
+        if not self.button_id:
+            self.return_to_previous()
+            return
+
+        action = self.context.actions.get(self.button_id, None)
+        if not action:
+            # TODO transition to action creation page
+            self.return_to_previous()
+            return
+
+        params = action.params
+
+        self.transitions = {}
+        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState, "args": {"button_id": self.button_id}}
+        for key, param in params.items():
+            transition = {"class": DummyState}
+            display_value = param.value
+            if param.param_type == bool:
+                transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}
+            elif param.param_type == int:
+                transition = {"class": ActionParamIntSelectorState, "args": {"param":param}}
+            elif param.param_type == str:
+                transition = {"class": ActionParamStringSelectorState, "args": {"param":param}}
+            elif issubclass(param.param_type, Enum):
+                transition = {"class": ActionParamEnumSelectorState, "args": {"param":param}}
+            elif param.param_type == list:
+                display_value = "[]"
+                transition = {"class": ActionParamListEditorState, "args": {"param":param}}
+
+            self.transitions[f"{key.capitalize()}: {display_value}"] = transition
         self.transitions["Back to Settings"] = None
         self.items = list(self.transitions.keys())
 
@@ -824,12 +982,14 @@ class MidiNodeDevice:
         self.state_stack.append(new_state)
         new_state.on_enter()
 
-    def pop_state(self):
+    def pop_state(self, deep: int = 1):
         """Go back to the previous menu."""
-        if len(self.state_stack) > 1:
-            self.state_stack.pop()
-            logging.info(f"Returning to {type(self.current_state).__name__}")
-            self.current_state.on_enter()        
+        for _ in range(deep):
+            if len(self.state_stack) > 1:
+                self.state_stack.pop()
+
+        logging.info(f"Returning to {type(self.current_state).__name__}")
+        self.current_state.on_enter()
 
 
     # UI Helpers
