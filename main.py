@@ -34,7 +34,7 @@ class Action:
     TYPE = "base"
     TITLE = "Base Action"
 
-    def __init__(self, context):
+    def __init__(self, context: 'DeviceContext'):
         self.context = context  # Reference to the MidiNodeDevice
 
         self.params: dict[str, ActionParam] = {}
@@ -145,7 +145,7 @@ class Controls(Enum):
 
 
 class DeviceState(ABC):
-    def __init__(self, context):
+    def __init__(self, context: 'DeviceContext'):
         self.context = context  # Reference to the MidiNodeDevice
 
     @abstractmethod
@@ -160,23 +160,23 @@ class DeviceState(ABC):
 
     def transition_to(self, new_state_class, **kwargs):
         """Helper to switch states."""
-        self.context.push_state(new_state_class(self.context, **kwargs))
+        self.context.state.push_state(new_state_class(self.context, **kwargs))
 
     def return_to_previous(self, deep: int = 1):
         """Helper to go back to the previous state."""
-        self.context.pop_state(deep)
+        self.context.state.pop_state(deep)
 
 class HomeState(DeviceState):
     def on_enter(self):
-        self.context.clear_ui()
-        self.context.write_ui("LIVE MODE\r\n\r\n\r\nPress [Select] to Setup", 0, 0, True)
+        self.context.ui.clear_ui()
+        self.context.ui.write_ui("LIVE MODE\r\n\r\n\r\nPress [Select] to Setup", 0, 0, True)
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:
             self.transition_to(SettingsMenuState)
         elif event.type == EventType.INFO_MESSAGE:
             info = event.data.get("info", "")
-            self.context.write_ui(f"[{info}]".center(20), 0, 1, True)
+            self.context.ui.write_ui(f"[{info}]".center(20), 0, 1, True)
 
 class MenuState(DeviceState):
     MAX_LINES = 4
@@ -194,7 +194,7 @@ class MenuState(DeviceState):
 
 
     def on_enter(self):
-        self.context.clear_ui()
+        self.context.ui.clear_ui()
         self._refresh_display()
 
     def handle_event(self, event):
@@ -215,14 +215,14 @@ class MenuState(DeviceState):
             cursor_pos = (self.origin_x, self.origin_y + line)
 
             if item_index >= len(self.items):
-                self.context.write_ui(" " * 20, cursor_pos[0], cursor_pos[1], True)
+                self.context.ui.write_ui(" " * 20, cursor_pos[0], cursor_pos[1], True)
                 continue
 
             prefix = ">" if item_index == self.selected_index else " "
             text = f"{prefix} {self.items[item_index]}"
 
             # Clear line leftovers
-            self.context.write_ui(text.ljust(20), cursor_pos[0], cursor_pos[1], True)
+            self.context.ui.write_ui(text.ljust(20), cursor_pos[0], cursor_pos[1], True)
 
     def _down(self) -> None:
         """
@@ -260,8 +260,8 @@ class MenuState(DeviceState):
 
 class DummyState(DeviceState):
     def on_enter(self):
-        self.context.clear_ui()
-        self.context.write_ui("DUMMY STATE\r\nNo Actions", 0, 0, True)
+        self.context.ui.clear_ui()
+        self.context.ui.write_ui("DUMMY STATE\r\nNo Actions", 0, 0, True)
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:
@@ -294,7 +294,7 @@ class IntNumberSelectorState(DeviceState):
 
 
     def on_enter(self):
-        self.context.clear_ui()
+        self.context.ui.clear_ui()
         self._refresh_display()
 
     def handle_event(self, event):
@@ -310,17 +310,17 @@ class IntNumberSelectorState(DeviceState):
         Draw header and current integer value.
         """
         # Header
-        self.context.write_ui(self.header.ljust(self.LINE_WIDTH), self.origin_x, self.origin_y, True)
+        self.context.ui.write_ui(self.header.ljust(self.LINE_WIDTH), self.origin_x, self.origin_y, True)
 
         # Value line
         formatted = self._format_value(self.value)
         value_line = f"< {formatted} >".center(self.LINE_WIDTH)
 
-        self.context.write_ui(value_line[:self.LINE_WIDTH], self.origin_x, self.origin_y + 1, True)
+        self.context.ui.write_ui(value_line[:self.LINE_WIDTH], self.origin_x, self.origin_y + 1, True)
 
         # Clear remaining lines
         for i in range(2, 4):
-            self.context.write_ui(" " * self.LINE_WIDTH, self.origin_x, self.origin_y + i, True)
+            self.context.ui.write_ui(" " * self.LINE_WIDTH, self.origin_x, self.origin_y + i, True)
 
     def _next(self) -> None:
         """
@@ -400,7 +400,7 @@ class StringCreatorState(DeviceState):
         self.chars: List[str] = list(value)
 
     def on_enter(self):
-        self.context.clear_ui()
+        self.context.ui.clear_ui()
         self._refresh_display()
 
     def handle_event(self, event):
@@ -418,24 +418,24 @@ class StringCreatorState(DeviceState):
 
     def _refresh_display(self) -> None:
         # Header
-        self.context.write_ui(self.header.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y, True)
+        self.context.ui.write_ui(self.header.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y, True)
 
         # Characters line
         visible_chars = self._get_visible_chars()
-        self.context.write_ui("".join(visible_chars).ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 1, True)
+        self.context.ui.write_ui("".join(visible_chars).ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 1, True)
 
         # Cursor line
         cursor_x = self.selected_index - self.scroll_offset
         cursor_line = " " * cursor_x + "^"
-        self.context.write_ui(cursor_line.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 2, True)
+        self.context.ui.write_ui(cursor_line.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 2, True)
 
         # Draw the current string.
         current_string = "".join(self.chars)
 
         if self.centered:
-            self.context.write_ui(current_string.center(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 3, True)
+            self.context.ui.write_ui(current_string.center(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 3, True)
         else:
-            self.context.write_ui(current_string.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 3, True)
+            self.context.ui.write_ui(current_string.ljust(self.VISIBLE_WIDTH), self.origin_x, self.origin_y + 3, True)
 
     def _add_char(self) -> None:
         """
@@ -608,10 +608,10 @@ class ActionSelectorState(MenuState):
             selected = self._get_selected()
             new_action_type = self.action_types[selected]
             
-            existing_action = self.context.actions.get(self.button_id, None)
+            existing_action = self.context.data.actions.get(self.button_id, None)
             if not existing_action or existing_action.__class__ != new_action_type["class"]:
                 # Create new action
-                self.context.actions[self.button_id] = new_action_type["class"](context=self.context)
+                self.context.data.actions[self.button_id] = new_action_type["class"](context=self.context)
 
             self.return_to_previous()
         else:
@@ -746,7 +746,7 @@ class ButtonSettingsMenuState(MenuState):
             self.return_to_previous()
             return
 
-        action = self.context.actions.get(self.button_id, None)
+        action = self.context.data.actions.get(self.button_id, None)
         if not action:
             # TODO transition to action creation page
             self.return_to_previous()
@@ -929,70 +929,27 @@ class UIManager(threading.Thread):
         self.display.clear()
         logging.info("UI Thread Shutting Down")
 
-# --- 4. The Main Controller (The Brain) ---
 
-class MidiNodeDevice:
-    def __init__(self):
-        # logging.basicConfig(level=logging.INFO, format='%(threadName)s: %(message)s')
-        logging.basicConfig(level=logging.ERROR, format='%(threadName)s: %(message)s')
-        
-        # Event Queues and Shutdown Event
-        self.event_queue = queue.Queue()
-        self.ui_queue = queue.Queue()
-        self.shutdown_event = threading.Event()
+
+
+
+class DataContext:
+    def __init__(self, device_context: 'DeviceContext'):
+        self.presets = {}
+        self.current_preset = None
 
         self.actions = {
-            Controls.BUTTON_1: InfoAction(info="Button 1 Pressed", context=self),
-            Controls.BUTTON_2: InfoAction(info="Button 2 Pressed", context=self),
-            Controls.BUTTON_3: InfoAction(info="Button 3 Pressed", context=self),
-            Controls.BUTTON_4: CCAction(cc=100, context=self),
-            Controls.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=self),
-            Controls.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=self),
+            Controls.BUTTON_1: InfoAction(info="Button 1 Pressed", context=device_context),
+            Controls.BUTTON_2: InfoAction(info="Button 2 Pressed", context=device_context),
+            Controls.BUTTON_3: InfoAction(info="Button 3 Pressed", context=device_context),
+            Controls.BUTTON_4: CCAction(cc=100, context=device_context),
+            Controls.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=device_context),
+            Controls.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=device_context),
         }
 
-        # Initialize Hardware
-        self.lcd = MockLCD()
-        self.lcd.clear()
-
-        # Initialize Threads
-        self.input_thread = InputManager(self.event_queue, self.shutdown_event, self.actions)
-        self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
-        
-        # Start in the Home State
-        self.state_stack = []
-        self.push_state(HomeState(self))
-
-    
-    # Action Helpers
-
-    def show_info(self, info: str):
-        """Display an informational message"""
-        self.event_queue.put(DeviceEvent(EventType.INFO_MESSAGE, data={"info": info}))
-
-
-    # State Management
-
-    @property
-    def current_state(self):
-        return self.state_stack[-1] if self.state_stack else None
-
-    def push_state(self, new_state: DeviceState):
-        """Go deeper into a menu."""
-        logging.info(f"Transitioning to {type(new_state).__name__}")
-        self.state_stack.append(new_state)
-        new_state.on_enter()
-
-    def pop_state(self, deep: int = 1):
-        """Go back to the previous menu."""
-        for _ in range(deep):
-            if len(self.state_stack) > 1:
-                self.state_stack.pop()
-
-        logging.info(f"Returning to {type(self.current_state).__name__}")
-        self.current_state.on_enter()
-
-
-    # UI Helpers
+class UIContext:
+    def __init__(self, ui_queue: queue.Queue):
+        self.ui_queue = ui_queue
 
     def write_ui(self, text, x=0, y=0, set_pos=False):
         """Helper to write text to the UI display."""
@@ -1001,6 +958,67 @@ class MidiNodeDevice:
     def clear_ui(self):
         """Helper to clear the UI display."""
         self.ui_queue.put(DeviceEvent(EventType.LCD_CLEAR))
+
+class StateContext:
+    def __init__(self, device_context: 'DeviceContext'):
+        self.context = device_context
+        self._state_stack = []
+
+    @property
+    def current_state(self) -> DeviceState:
+        return self._state_stack[-1] if self._state_stack else None
+
+    def push_state(self, new_state: DeviceState):
+        """Go deeper into a menu."""
+        logging.info(f"Transitioning to {type(new_state).__name__}")
+        self._state_stack.append(new_state)
+        new_state.on_enter()
+
+    def pop_state(self, deep: int = 1):
+        """Go back to the previous menu."""
+        for _ in range(deep):
+            if len(self._state_stack) > 1:
+                self._state_stack.pop()
+
+        logging.info(f"Returning to {type(self.current_state).__name__}")
+        self.current_state.on_enter()
+
+class DeviceContext:
+    def __init__(self, event_queue: queue.Queue, ui_queue: queue.Queue):
+        self.data = DataContext(self)
+        self.ui = UIContext(ui_queue)
+        self.state = StateContext(self)
+        self.event_queue = event_queue
+
+    def show_info(self, info: str):
+        """Display an informational message"""
+        self.event_queue.put(DeviceEvent(EventType.INFO_MESSAGE, data={"info": info}))
+
+
+
+
+class MidiNodeDevice:
+    def __init__(self):
+        # logging.basicConfig(level=logging.INFO, format='%(threadName)s: %(message)s')
+        logging.basicConfig(level=logging.ERROR, format='%(threadName)s: %(message)s')
+        
+
+        # Event Queues and Shutdown Event
+        self.event_queue = queue.Queue()
+        self.ui_queue = queue.Queue()
+        self.shutdown_event = threading.Event()
+
+        self.context = DeviceContext(self.event_queue, self.ui_queue)
+
+        # Initialize Hardware
+        self.lcd = MockLCD()
+        self.lcd.clear()
+
+        # Initialize Threads
+        self.input_thread = InputManager(self.event_queue, self.shutdown_event, self.context.data.actions)
+        self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
+    
+        self.context.state.push_state(HomeState(self.context))
 
     
     # Main Loop
@@ -1018,7 +1036,7 @@ class MidiNodeDevice:
         while not self.shutdown_event.is_set():
             try:
                 event = self.event_queue.get(timeout=0.5)
-                self.current_state.handle_event(event)
+                self.context.state.current_state.handle_event(event)
                 self.event_queue.task_done()
             except queue.Empty:
                 continue
