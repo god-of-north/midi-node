@@ -7,20 +7,12 @@ from enum import Enum, auto
 from abc import ABC, abstractmethod
 from input import KeyboardInputManager,ButtonEvent
 from MockLCD import CharLCD
-from typing import List
+import json
+import os
+import shutil
+from pathlib import Path
+from typing import Dict, List, Optional, Type, Any
 
-
-ACTION_REGISTRY = {}
-
-def register_action(cls):
-    action_type = getattr(cls, 'TYPE', cls.__name__)
-    title = getattr(cls, 'TITLE', action_type)
-
-    ACTION_REGISTRY[action_type] = {
-        "class": cls,
-        "title": title,
-    }
-    return cls
 
 class ActionParam:
     def __init__(self, name: str, param_type: type, value, default=None, options:dict={}):
@@ -30,31 +22,82 @@ class ActionParam:
         self.default = default
         self.options = options or {}
 
+
+class ActionRegistryEntry:
+    def __init__(self, action_type: str, action_cls: Type['Action'], title: str):
+        self.action_type = action_type
+        self.action_cls = action_cls
+        self.title = title
+
+class ActionRegistry:
+    """A dedicated registry to keep the global namespace clean."""
+    _registry: Dict[str, ActionRegistryEntry] = {}
+
+    @classmethod
+    def register(cls, action_type: str, action_cls: Type['Action'], title: str):
+        cls._registry[action_type] = ActionRegistryEntry(action_type, action_cls, title)
+
+    @classmethod
+    def get_class(cls, action_type: str) -> Optional[Type['Action']]:
+        entry = cls._registry.get(action_type)
+        return entry.action_cls if entry else None
+
+    @classmethod
+    def get_registered(cls, action_type: str) -> Optional[ActionRegistryEntry]:
+        entry = cls._registry.get(action_type)
+        return entry if entry else None
+    
+    @classmethod
+    def get_keys(cls) -> List[str]:
+        return list(cls._registry.keys())
+
+
 class Action:
     TYPE = "base"
     TITLE = "Base Action"
 
-    def __init__(self, context: 'DeviceContext'):
-        self.context = context  # Reference to the MidiNodeDevice
+    def __init__(self, context: 'DeviceContext', **kwargs):
+        self.context = context
+        self.params: dict[str, ActionParam] = kwargs.get("params", {})
 
-        self.params: dict[str, ActionParam] = {}
+    def __init_subclass__(cls, **kwargs):
+        """
+        Automatically called when any subclass is defined.
+        Registers the subclass in the ActionRegistry.
+        """
+        super().__init_subclass__(**kwargs)
+        if cls.TYPE != "base":
+            ActionRegistry.register(cls.TYPE, cls, cls.TITLE)
 
     def execute(self):
         raise NotImplementedError
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "type": self.TYPE,
+            "params": self.params
         }
 
-    @classmethod
-    def from_dict(cls, data):
-        return cls(**data)
-    
+    @staticmethod
+    def from_dict(data: dict, context: 'DeviceContext') -> 'Action':
+        """
+        The Factory Method: It looks up the correct subclass and 
+        instantiates it with the provided data.
+        """
+        action_type = data.get("type")
+        action_cls = ActionRegistry.get_class(action_type)
+
+        if not action_cls:
+            # Fallback to base or raise error if type is unknown
+            print(f"Warning: Unknown action type '{action_type}'. Using base Action.")
+            return Action(context=context)
+
+        params = data.get("params", {})
+        return action_cls(context=context, **params)
+
     def __str__(self):
         return self.TITLE
 
-@register_action
 class InfoAction(Action):
     TYPE = "info"
     TITLE = "Show Info"
@@ -70,7 +113,6 @@ class InfoAction(Action):
         data = super().to_dict()
         return {**data, "info": self.params["info"].value}
     
-@register_action
 class CCAction(Action):
     TYPE = "cc"
     TITLE = "Send CC"
@@ -86,7 +128,6 @@ class CCAction(Action):
         data = super().to_dict()
         return {**data, "cc": self.params["cc"].value}
 
-@register_action
 class PCAction(Action):
     TYPE = "pc"
     TITLE = "Send PC"
@@ -102,7 +143,6 @@ class PCAction(Action):
         data = super().to_dict()
         return {**data, "pc": self.params["pc"].value}
 
-@register_action
 class CompositeAction(Action):
     TYPE = "composite"
     TITLE = "Composite Action"
@@ -123,21 +163,215 @@ class CompositeAction(Action):
         return {**data, "actions": [action.to_dict() for action in self.params["actions"].value]}
     
     def get_creator_items(self):
-        return list(ACTION_REGISTRY.keys())
+        return list(ActionRegistry.get_keys())
     
     def create_action_by_type(self, action_type:str):
-        action_info = ACTION_REGISTRY.get(action_type, None)
+        action_info = ActionRegistry.get_registered(action_type)
         if action_info:
-            return action_info["class"](context=self.context)
+            return action_info.action_cls(context=self.context)
         return None
 
-class Controls(Enum):
+class Control(Enum):
     BUTTON_1 = auto()
     BUTTON_2 = auto()
     BUTTON_3 = auto()
     BUTTON_4 = auto()
     EXP_PEDAL_1 = auto()
     EXP_PEDAL_2 = auto()
+
+
+
+
+
+
+
+
+
+class Preset:
+    def __init__(self, name: str, controls: Dict[Control, Action] = None):
+        self.name = name
+        self.controls = controls or {}
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "controls": {str(k): v.to_dict() for k, v in self.controls.items()}
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict, context=None):
+        name = data.get("name", "[Unnamed]")
+        controls = {}
+        for ctrl_name, action_data in data.get("controls", {}).items():
+            action = Action.from_dict(action_data, context=context)
+            controls[Control[ctrl_name]] = action
+        return cls(name=name, controls=controls)
+
+class Bank:
+    def __init__(self, name: str, preset_numbers: List[int] = None):
+        self.name = name
+        self.preset_numbers = preset_numbers or []
+
+    def to_dict(self):
+        return {"name": self.name, "presets": self.preset_numbers}
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(name=data["name"], preset_numbers=data.get("presets", []))
+
+class StorageManager:
+    def __init__(self, root_path: str, context=None):
+        self.root = Path(root_path)
+        self.preset_dir = self.root / "presets"
+        self.bank_dir = self.root / "banks"
+        self.context = context
+        
+        # Ensure directories exist
+        self.preset_dir.mkdir(parents=True, exist_ok=True)
+        self.bank_dir.mkdir(parents=True, exist_ok=True)
+
+    # --- Internal Utilities ---
+
+    def _get_preset_path(self, number: int) -> Path:
+        return self.preset_dir / f"{number:03d}.json"
+
+    def _get_bank_path(self, number: int) -> Path:
+        return self.bank_dir / f"{number:03d}.json"
+
+    # --- Preset API ---
+
+    def save_preset(self, number: int, preset: Preset):
+        path = self._get_preset_path(number)
+        with open(path, 'w') as f:
+            json.dump(preset.to_dict(), f, indent=4)
+
+    def load_preset(self, number: int) -> Optional[Preset]:
+        path = self._get_preset_path(number)
+        if not path.exists():
+            return None
+        with open(path, 'r') as f:
+            return Preset.from_dict(json.load(f), context=self.context)
+
+    def get_preset_list(self) -> List[dict]:
+        """Returns list of {number: int, name: str}"""
+        presets = []
+        for file in sorted(self.preset_dir.glob("*.json")):
+            with open(file, 'r') as f:
+                data = json.load(f)
+                presets.append({
+                    "number": int(file.stem),
+                    "name": data.get("name", "Unnamed")
+                })
+        return presets
+
+    def reorder_presets(self, source_num: int, target_num: int, mode: str = "move"):
+        """
+        Handles moving/cloning and triggers bank updates.
+        mode: 'move' (renames) or 'clone' (copies)
+        """
+        source_path = self._get_preset_path(source_num)
+        target_path = self._get_preset_path(target_num)
+
+        if not source_path.exists():
+            raise FileNotFoundError(f"Source preset {source_num} not found.")
+
+        # If target exists, we shift everything or overwrite? 
+        # Expert choice: Let's implement a clean move and notify banks.
+        if mode == "move":
+            shutil.move(str(source_path), str(target_path))
+            self._update_banks_on_preset_change(source_num, target_num)
+        else:
+            shutil.copy(str(source_path), str(target_path))
+
+    def remove_preset(self, number: int):
+        path = self._get_preset_path(number)
+        if path.exists():
+            os.remove(path)
+            self._update_banks_on_preset_change(number, None) # None = Deleted
+
+    def save_current_preset_index(self, preset_number: int):
+        path = self.root / "current_preset.txt"
+        with open(path, 'w') as f:
+            f.write(str(preset_number))
+    
+    def load_current_preset_index(self) -> Optional[int]:
+        path = self.root / "current_preset.txt"
+        if not path.exists():
+            return None
+        with open(path, 'r') as f:
+            return int(f.read().strip())
+
+
+    # --- Bank API ---
+
+    def create_bank(self, number: int, name: str):
+        bank = Bank(name=name)
+        self.save_bank(number, bank)
+
+    def save_bank(self, number: int, bank: Bank):
+        path = self._get_bank_path(number)
+        with open(path, 'w') as f:
+            json.dump(bank.to_dict(), f, indent=4)
+
+    def load_bank(self, number: int) -> Optional[Bank]:
+        path = self._get_bank_path(number)
+        if not path.exists():
+            return None
+        with open(path, 'r') as f:
+            return Bank.from_dict(json.load(f))
+
+    def get_bank_list(self) -> List[dict]:
+        banks = []
+        for file in sorted(self.bank_dir.glob("*.json")):
+            with open(file, 'r') as f:
+                data = json.load(f)
+                banks.append({
+                    "number": int(file.stem),
+                    "name": data.get("name", "Unnamed")
+                })
+        return banks
+
+    def save_current_bank_index(self, bank_number: int):
+        path = self.root / "current_bank.txt"
+        with open(path, 'w') as f:
+            f.write(str(bank_number))
+
+    def load_current_bank_index(self) -> Optional[int]:
+        path = self.root / "current_bank.txt"
+        if not path.exists():
+            return None
+        with open(path, 'r') as f:
+            return int(f.read().strip())
+
+
+    # --- Integrity Logic ---
+
+    def _update_banks_on_preset_change(self, old_num: int, new_num: Optional[int]):
+        """
+        Scans all banks and updates references if a preset moved or was deleted.
+        """
+        for bank_file in self.bank_dir.glob("*.json"):
+            bank_id = int(bank_file.stem)
+            bank = self.load_bank(bank_id)
+            
+            if old_num in bank.preset_numbers:
+                # Replace or Remove
+                updated_list = []
+                for p_num in bank.preset_numbers:
+                    if p_num == old_num:
+                        if new_num is not None:
+                            updated_list.append(new_num)
+                    else:
+                        updated_list.append(p_num)
+                
+                bank.preset_numbers = updated_list
+                self.save_bank(bank_id, bank)
+
+
+
+
+
+
 
 
 
@@ -598,9 +832,13 @@ class ActionSelectorState(MenuState):
         super().__init__(context)
 
         self.button_id = button_id
-        self.action_types = {}
-        for action_type, action_info in ACTION_REGISTRY.items():
-            self.action_types[action_info["title"]] = action_info
+        self.action_types: Dict[str, ActionRegistryEntry] = {}
+
+        action_types = ActionRegistry.get_keys()
+        for action_type in action_types:
+            action_info = ActionRegistry.get_registered(action_type)
+            if action_info:
+                self.action_types[action_info.title] = action_info
         self.items = list(self.action_types.keys())
 
     def handle_event(self, event):
@@ -608,10 +846,10 @@ class ActionSelectorState(MenuState):
             selected = self._get_selected()
             new_action_type = self.action_types[selected]
             
-            existing_action = self.context.data.actions.get(self.button_id, None)
-            if not existing_action or existing_action.__class__ != new_action_type["class"]:
+            existing_action = self.context.data.preset.controls.get(self.button_id, None)
+            if not existing_action or existing_action.__class__ != new_action_type.action_cls:
                 # Create new action
-                self.context.data.actions[self.button_id] = new_action_type["class"](context=self.context)
+                self.context.data.preset.controls[self.button_id] = new_action_type.action_cls(context=self.context)
 
             self.return_to_previous()
         else:
@@ -746,7 +984,7 @@ class ButtonSettingsMenuState(MenuState):
             self.return_to_previous()
             return
 
-        action = self.context.data.actions.get(self.button_id, None)
+        action = self.context.data.preset.controls.get(self.button_id, None)
         if not action:
             # TODO transition to action creation page
             self.return_to_previous()
@@ -793,12 +1031,12 @@ class SettingsMenuState(MenuState):
         super().__init__(context)
 
         self.transitions = {
-            "Setup Button 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_1}},
-            "Setup Button 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_2}},
-            "Setup Button 3": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_3}},
-            "Setup Button 4": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.BUTTON_4}},
-            "Setup Exp Pedal 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.EXP_PEDAL_1}},
-            "Setup Exp Pedal 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Controls.EXP_PEDAL_2}},
+            "Setup Button 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_1}},
+            "Setup Button 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_2}},
+            "Setup Button 3": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_3}},
+            "Setup Button 4": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_4}},
+            "Setup Exp Pedal 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.EXP_PEDAL_1}},
+            "Setup Exp Pedal 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.EXP_PEDAL_2}},
             "Delete Preset": {"class": DummyState},
             "Clone Preset": {"class": DummyState},
             "Back to Live Mode": None
@@ -866,7 +1104,7 @@ class MockLCD(DisplayProvider):
 
 class InputManager(threading.Thread):
     """Monitors GPIO pins and puts events into the queue."""
-    def __init__(self, event_queue: queue.Queue, shutdown_event: threading.Event, actions: dict[Controls, Action]):
+    def __init__(self, event_queue: queue.Queue, shutdown_event: threading.Event, actions: dict[Control, Action]):
         super().__init__(daemon=True)
         self.queue = event_queue
         self.shutdown = shutdown_event
@@ -883,10 +1121,10 @@ class InputManager(threading.Thread):
         self.input_handler.add_button('enter', {ButtonEvent.PRESS: lambda: self.queue.put(DeviceEvent(EventType.ENCODER_SELECT))})
 
         key_map = {
-            Controls.BUTTON_1: '1',
-            Controls.BUTTON_2: '2',
-            Controls.BUTTON_3: '3',
-            Controls.BUTTON_4: '4',
+            Control.BUTTON_1: '1',
+            Control.BUTTON_2: '2',
+            Control.BUTTON_3: '3',
+            Control.BUTTON_4: '4',
         }
         for control, action in actions.items():
             if control in key_map.keys():
@@ -935,17 +1173,32 @@ class UIManager(threading.Thread):
 
 class DataContext:
     def __init__(self, device_context: 'DeviceContext'):
-        self.presets = {}
-        self.current_preset = None
+        self.storage = StorageManager("./data")
 
-        self.actions = {
-            Controls.BUTTON_1: InfoAction(info="Button 1 Pressed", context=device_context),
-            Controls.BUTTON_2: InfoAction(info="Button 2 Pressed", context=device_context),
-            Controls.BUTTON_3: InfoAction(info="Button 3 Pressed", context=device_context),
-            Controls.BUTTON_4: CCAction(cc=100, context=device_context),
-            Controls.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=device_context),
-            Controls.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=device_context),
-        }
+        self.bank_list = self.storage.get_bank_list()
+        self.current_bank_index = self.storage.load_current_bank_index()
+        self.preset_list = self.storage.get_preset_list()
+        self.current_preset_index = self.storage.load_current_preset_index()
+        
+        if self.current_bank_index is not None:
+            self.bank = self.storage.load_bank(self.current_bank_index) 
+        else:
+            self.bank = Bank(name="Default Bank", preset_numbers=[0])
+            self.current_bank_index = 0
+
+        if self.current_preset_index is not None:
+            self.preset = self.storage.load_preset(self.current_preset_index) 
+        else:
+            controls = {
+                Control.BUTTON_1: InfoAction(info="Button 1 Pressed", context=device_context),
+                Control.BUTTON_2: InfoAction(info="Button 2 Pressed", context=device_context),
+                Control.BUTTON_3: InfoAction(info="Button 3 Pressed", context=device_context),
+                Control.BUTTON_4: InfoAction(info="Button 4 Pressed", context=device_context),
+                Control.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=device_context),
+                Control.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=device_context),
+            }
+            self.preset = Preset(name="Default Preset", controls=controls)
+            self.current_preset_index = 0
 
 class UIContext:
     def __init__(self, ui_queue: queue.Queue):
@@ -1015,7 +1268,7 @@ class MidiNodeDevice:
         self.lcd.clear()
 
         # Initialize Threads
-        self.input_thread = InputManager(self.event_queue, self.shutdown_event, self.context.data.actions)
+        self.input_thread = InputManager(self.event_queue, self.shutdown_event, self.context.data.preset.controls)
         self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
     
         self.context.state.push_state(HomeState(self.context))
