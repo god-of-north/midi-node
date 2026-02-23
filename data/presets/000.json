@@ -1,0 +1,38 @@
+{
+    "name": "My Preset A",
+    "controls": {
+        "Control.BUTTON_1": {
+            "type": "composite",
+            "actions": [
+                {
+                    "type": "cc",
+                    "cc": 127
+                },
+                {
+                    "type": "pc",
+                    "pc": 0
+                }
+            ]
+        },
+        "Control.BUTTON_2": {
+            "type": "info",
+            "info": "Button 2 BBB"
+        },
+        "Control.BUTTON_3": {
+            "type": "info",
+            "info": "Button 3 Pressed"
+        },
+        "Control.BUTTON_4": {
+            "type": "info",
+            "info": "Button 4 Pressed"
+        },
+        "Control.EXP_PEDAL_1": {
+            "type": "info",
+            "info": "Exp Pedal 1 Act"
+        },
+        "Control.EXP_PEDAL_2": {
+            "type": "info",
+            "info": "Exp Pedal 2 Act"
+        }
+    }
+}

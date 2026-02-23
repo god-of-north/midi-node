@@ -22,6 +22,28 @@ class ActionParam:
         self.default = default
         self.options = options or {}
 
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "param_type": self.param_type.__name__,
+            "value": self.value,
+            "default": self.default,
+            "options": self.options
+        }
+    
+    def __dict__(self):
+        return self.to_dict()
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'ActionParam':
+        param_type = eval(data["param_type"])
+        return cls(
+            name=data["name"],
+            param_type=param_type,
+            value=data["value"],
+            default=data.get("default"),
+            options=data.get("options", {})
+        )
 
 class ActionRegistryEntry:
     def __init__(self, action_type: str, action_cls: Type['Action'], title: str):
@@ -75,7 +97,7 @@ class Action:
     def to_dict(self) -> dict:
         return {
             "type": self.TYPE,
-            "params": self.params
+            #"params": self.params
         }
 
     @staticmethod
@@ -93,7 +115,7 @@ class Action:
             return Action(context=context)
 
         params = data.get("params", {})
-        return action_cls(context=context, **params)
+        return action_cls(context=context, **data)
 
     def __str__(self):
         return self.TITLE
@@ -199,12 +221,13 @@ class Preset:
         }
 
     @classmethod
-    def from_dict(cls, data: dict, context=None):
+    def from_dict(cls, data: dict, context: 'DeviceContext'):
         name = data.get("name", "[Unnamed]")
         controls = {}
         for ctrl_name, action_data in data.get("controls", {}).items():
             action = Action.from_dict(action_data, context=context)
-            controls[Control[ctrl_name]] = action
+            member_name = ctrl_name.split(".")[-1]
+            controls[Control[member_name]] = action
         return cls(name=name, controls=controls)
 
 class Bank:
@@ -220,7 +243,7 @@ class Bank:
         return cls(name=data["name"], preset_numbers=data.get("presets", []))
 
 class StorageManager:
-    def __init__(self, root_path: str, context=None):
+    def __init__(self, root_path: str, context: 'DeviceContext'):
         self.root = Path(root_path)
         self.preset_dir = self.root / "presets"
         self.bank_dir = self.root / "banks"
@@ -256,11 +279,18 @@ class StorageManager:
         """Returns list of {number: int, name: str}"""
         presets = []
         for file in sorted(self.preset_dir.glob("*.json")):
-            with open(file, 'r') as f:
-                data = json.load(f)
+            try:
+                with open(file, 'r') as f:
+                    data = json.load(f)
+                    presets.append({
+                        "number": int(file.stem),
+                        "name": data.get("name", "Unnamed")
+                    })
+            except Exception as e:
+                print(f"Error loading preset file {file}: {e}")
                 presets.append({
                     "number": int(file.stem),
-                    "name": data.get("name", "Unnamed")
+                    "name": "Error"
                 })
         return presets
 
@@ -1026,6 +1056,29 @@ class ButtonSettingsMenuState(MenuState):
         else:
             super().handle_event(event)
 
+class SavePresetState(StringCreatorState):
+    def __init__(self, context):
+        super().__init__(
+            context,
+            value=context.data.preset.name,
+            characters="_ ABCDEFGHIJKLMNOPQRSTUVWXYZ_ abcdefghijklmnopqrstuvwxyz _0123456789 _",
+            header="Save Preset As:",
+            centered=False,
+        )
+
+    def return_to_previous(self):
+        preset_name = self._get_string().strip()
+        if preset_name:
+            self.context.data.preset.name = preset_name
+            # Save to storage
+            preset_number = self.context.data.current_preset_index
+            self.context.data.storage.save_preset(preset_number, self.context.data.preset)
+            self.context.data.storage.save_current_preset_index(preset_number)
+            self.context.ui.clear_ui()
+            self.context.ui.write_ui(f"Preset Saved as \r\n'{preset_name}'", 0, 1, True)
+            time.sleep(1.5)
+        super().return_to_previous()
+
 class SettingsMenuState(MenuState):
     def __init__(self, context):
         super().__init__(context)
@@ -1037,8 +1090,9 @@ class SettingsMenuState(MenuState):
             "Setup Button 4": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_4}},
             "Setup Exp Pedal 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.EXP_PEDAL_2}},
-            "Delete Preset": {"class": DummyState},
+            "Save Preset": {"class": SavePresetState},
             "Clone Preset": {"class": DummyState},
+            "Delete Preset": {"class": DummyState},
             "Back to Live Mode": None
         }
         self.items = list(self.transitions.keys())
@@ -1173,7 +1227,7 @@ class UIManager(threading.Thread):
 
 class DataContext:
     def __init__(self, device_context: 'DeviceContext'):
-        self.storage = StorageManager("./data")
+        self.storage = StorageManager("./data", context=device_context)
 
         self.bank_list = self.storage.get_bank_list()
         self.current_bank_index = self.storage.load_current_bank_index()
@@ -1199,6 +1253,9 @@ class DataContext:
             }
             self.preset = Preset(name="Default Preset", controls=controls)
             self.current_preset_index = 0
+
+    def save_current_preset(self):
+        self.storage.save_preset(self.current_preset_index, self.preset)
 
 class UIContext:
     def __init__(self, ui_queue: queue.Queue):
