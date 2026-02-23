@@ -95,17 +95,29 @@ class Action:
         raise NotImplementedError
 
     def to_dict(self) -> dict:
-        return {
-            "type": self.TYPE,
-            #"params": self.params
-        }
+        result = {"type": self.TYPE}
+        
+        for param in self.params.values():
+            if hasattr(param.value, "to_dict"):
+                result[param.name] = param.value.to_dict()
+            elif isinstance(param.value, list):
+                result[param.name] = self.list_to_dict(param.value)
+            else:
+                result[param.name] = param.value
+
+        return result
+    
+    def list_to_dict(self, items: List[Any]) -> List[dict]:
+        result = []
+        for item in items:
+            if hasattr(item, "to_dict"):
+                result.append(item.to_dict())
+            else:
+                result.append(item)
+        return result
 
     @staticmethod
     def from_dict(data: dict, context: 'DeviceContext') -> 'Action':
-        """
-        The Factory Method: It looks up the correct subclass and 
-        instantiates it with the provided data.
-        """
         action_type = data.get("type")
         action_cls = ActionRegistry.get_class(action_type)
 
@@ -114,7 +126,6 @@ class Action:
             print(f"Warning: Unknown action type '{action_type}'. Using base Action.")
             return Action(context=context)
 
-        params = data.get("params", {})
         return action_cls(context=context, **data)
 
     def __str__(self):
@@ -130,11 +141,7 @@ class InfoAction(Action):
 
     def execute(self):
         self.context.show_info(self.params["info"].value)
-
-    def to_dict(self):
-        data = super().to_dict()
-        return {**data, "info": self.params["info"].value}
-    
+   
 class CCAction(Action):
     TYPE = "cc"
     TITLE = "Send CC"
@@ -145,10 +152,6 @@ class CCAction(Action):
 
     def execute(self):
         self.context.show_info(self.params["cc"].value)
-
-    def to_dict(self):
-        data = super().to_dict()
-        return {**data, "cc": self.params["cc"].value}
 
 class PCAction(Action):
     TYPE = "pc"
@@ -161,17 +164,22 @@ class PCAction(Action):
     def execute(self):
         self.context.show_info(self.params["pc"].value)
 
-    def to_dict(self):
-        data = super().to_dict()
-        return {**data, "pc": self.params["pc"].value}
-
 class CompositeAction(Action):
     TYPE = "composite"
     TITLE = "Composite Action"
 
     def __init__(self, actions:List[Action]=[], **kwargs):
         super().__init__(**kwargs)
-        self.params["actions"] = ActionParam("actions", list, actions, default=[], 
+
+        fixed_actions = []
+        for action in actions:
+            if isinstance(action, Action):
+                fixed_actions.append(action)
+            if isinstance(action, dict):
+                action = self.create_action_by_type(action["type"], action)
+                fixed_actions.append(action)
+
+        self.params["actions"] = ActionParam("actions", list, fixed_actions, default=[], 
                                              options={"class_type": Action, 
                                                       "creator_func": self.create_action_by_type, 
                                                       "creator_items_func": self.get_creator_items})
@@ -180,17 +188,13 @@ class CompositeAction(Action):
         for action in self.params["actions"].value:
             action.execute()
 
-    def to_dict(self):
-        data = super().to_dict()
-        return {**data, "actions": [action.to_dict() for action in self.params["actions"].value]}
-    
     def get_creator_items(self):
         return list(ActionRegistry.get_keys())
     
-    def create_action_by_type(self, action_type:str):
+    def create_action_by_type(self, action_type:str, data:dict={}) -> Optional[Action]:
         action_info = ActionRegistry.get_registered(action_type)
         if action_info:
-            return action_info.action_cls(context=self.context)
+            return action_info.action_cls(context=self.context, **data)
         return None
 
 class Control(Enum):
@@ -266,7 +270,8 @@ class StorageManager:
     def save_preset(self, number: int, preset: Preset):
         path = self._get_preset_path(number)
         with open(path, 'w') as f:
-            json.dump(preset.to_dict(), f, indent=4)
+            preset_dict = preset.to_dict()
+            json.dump(preset_dict, f, indent=4)
 
     def load_preset(self, number: int) -> Optional[Preset]:
         path = self._get_preset_path(number)

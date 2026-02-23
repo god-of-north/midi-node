@@ -1,22 +1,18 @@
 {
-    "name": "My Preset A",
+    "name": "Default Preset",
     "controls": {
         "Control.BUTTON_1": {
             "type": "composite",
             "actions": [
                 {
                     "type": "cc",
-                    "cc": 127
-                },
-                {
-                    "type": "pc",
-                    "pc": 0
+                    "cc": 109
                 }
             ]
         },
         "Control.BUTTON_2": {
             "type": "info",
-            "info": "Button 2 BBB"
+            "info": "Button 2 Pressed"
         },
         "Control.BUTTON_3": {
             "type": "info",
