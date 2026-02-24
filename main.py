@@ -1070,19 +1070,31 @@ class SavePresetState(StringCreatorState):
             header="Save Preset As:",
             centered=False,
         )
+        self.saved = False
 
     def return_to_previous(self):
         preset_name = self._get_string().strip()
+        self.transition_to(ListItemReplaceState, 
+                           items=[f"{p['name']}" for p in self.context.data.storage.get_preset_list()],
+                           element_name=preset_name, 
+                           current_index=self.context.data.current_preset_index, 
+                           callback=self.save_preset,
+                           return_to_previous_depth=2)
+
+    def save_preset(self, index: int):
+        preset_name = self._get_string().strip()
         if preset_name:
             self.context.data.preset.name = preset_name
+            self.context.data.current_preset_index = index
+
             # Save to storage
-            preset_number = self.context.data.current_preset_index
-            self.context.data.storage.save_preset(preset_number, self.context.data.preset)
-            self.context.data.storage.save_current_preset_index(preset_number)
+            self.context.data.storage.save_preset(index, self.context.data.preset)
+            self.context.data.storage.save_current_preset_index(index)
+
+            # Show confirmation
             self.context.ui.clear_ui()
             self.context.ui.write_ui(f"Preset Saved as \r\n'{preset_name}'", 0, 1, True)
             time.sleep(1.5)
-        super().return_to_previous()
 
 class SettingsMenuState(MenuState):
     def __init__(self, context):
@@ -1112,6 +1124,209 @@ class SettingsMenuState(MenuState):
                 self.return_to_previous()
         else:
             super().handle_event(event)
+
+class ListOrderingState(DeviceState):
+    MAX_LINES = 4
+    LINE_WIDTH = 40
+
+    def __init__(self, context, items:List[str]=None, current_index:int=0):
+        super().__init__(context)
+
+        self.items = items or ["Back"]
+
+        self.origin_x = 0
+        self.origin_y = 0
+
+        self.current_index = 0
+        self.scroll_offset = 0
+
+        self._set_current(current_index)
+
+
+    def on_enter(self):
+        self.context.ui.clear_ui()
+        self._refresh_display()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_CW:
+            self._up()
+        elif event.type == EventType.ENCODER_CCW:
+            self._down()
+        elif event.type == EventType.ENCODER_SELECT:
+            self.return_to_previous()
+
+    def _refresh_display(self) -> None:
+        """
+        Redraw visible part of the list.
+        """
+        for line in range(self.MAX_LINES):
+            item_index = self.scroll_offset + line
+            self.console.cursor_pos = (self.origin_x, self.origin_y + line)
+
+            if item_index >= len(self.items):
+                self.console.write_string(" " * self.LINE_WIDTH)
+                continue
+
+            prefix = "> " if item_index == self.current_index else "  "
+            text = prefix + self.items[item_index]
+            self.console.write_string(text[:self.LINE_WIDTH].ljust(self.LINE_WIDTH))
+
+    def _set_current(self, index: int) -> None:
+        """
+        Select element by index and ensure it's visible.
+        """
+        if index < 0 or index >= len(self.items):
+            raise IndexError("Index out of range")
+
+        self.current_index = index
+
+        if self.current_index < self.scroll_offset:
+            self.scroll_offset = self.current_index
+        elif self.current_index >= self.scroll_offset + self.MAX_LINES:
+            self.scroll_offset = self.current_index - self.MAX_LINES + 1
+
+        self._refresh_display()
+
+    def _down(self) -> None:
+        """
+        Move selected element down in list.
+        """
+        if self.current_index >= len(self.items) - 1:
+            return
+
+        # Swap elements
+        self.items[self.current_index], self.items[self.current_index + 1] = (
+            self.items[self.current_index + 1],
+            self.items[self.current_index],
+        )
+
+        self.current_index += 1
+
+        # Scroll if needed (same rule as Menu)
+        if self.current_index >= self.scroll_offset + self.MAX_LINES - 1:
+            self.scroll_offset += 1
+
+        self._refresh_display()
+
+    def _up(self) -> None:
+        """
+        Move selected element up in list.
+        """
+        if self.current_index <= 0:
+            return
+
+        # Swap elements
+        self.items[self.current_index], self.items[self.current_index - 1] = (
+            self.items[self.current_index - 1],
+            self.items[self.current_index],
+        )
+
+        self.current_index -= 1
+
+        if self.current_index < self.scroll_offset:
+            self.scroll_offset -= 1
+
+        self._refresh_display()
+
+    def get_list(self) -> List[str]:
+        """
+        Return reordered list.
+        """
+        return self.items
+
+class ListItemReplaceState(DeviceState):
+    MAX_LINES = 4
+
+    def __init__(self, context, items:List[str]=None, current_index:int=0, element_name:str="Item", callback=None, return_to_previous_depth:int=1):
+        super().__init__(context)
+
+        self.callback = callback
+        self.items = items or ["Back"]
+        self.origin_x = 0
+        self.origin_y = 0
+
+        self.selected_index = current_index
+        self.scroll_offset = 0
+        self.element_name = element_name
+        self.return_to_previous_depth = return_to_previous_depth
+
+
+    def on_enter(self):
+        self.context.ui.clear_ui()
+        self._refresh_display()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_CW:
+            self._up()
+        elif event.type == EventType.ENCODER_CCW:
+            self._down()
+        elif event.type == EventType.ENCODER_SELECT:
+            if self.callback:
+                index = self._get_index()
+                self.callback(index)
+            self.return_to_previous(self.return_to_previous_depth)
+
+    def _refresh_display(self) -> None:
+        """
+        Draw menu with selector.
+        """
+        for line in range(self.MAX_LINES):
+            item_index = self.scroll_offset + line
+
+            cursor_pos = (self.origin_x, self.origin_y + line)
+
+            if item_index >= len(self.items):
+                self.context.ui.write_ui(" " * 20, cursor_pos[0], cursor_pos[1], True)
+                continue
+
+            is_selected = item_index == self.selected_index
+            item_name = self.element_name if is_selected else self.items[item_index]
+            line_text = f"{item_index:3d}: {item_name}"
+            prefix = ">" if is_selected else " "
+            text = f"{prefix} {line_text}"
+
+            # Clear line leftovers
+            self.context.ui.write_ui(text.ljust(20), cursor_pos[0], cursor_pos[1], True)
+
+    def _down(self) -> None:
+        """
+        Move cursor down. Scroll if needed.
+        """
+        if self.selected_index >= len(self.items) - 1:
+            return
+
+        self.selected_index += 1
+
+        if self.selected_index >= self.scroll_offset + self.MAX_LINES:
+            self.scroll_offset += 1
+
+        self._refresh_display()
+
+    def _up(self) -> None:
+        """
+        Move cursor up. Scroll if needed.
+        """
+        if self.selected_index <= 0:
+            return
+
+        self.selected_index -= 1
+
+        if self.selected_index < self.scroll_offset:
+            self.scroll_offset -= 1
+
+        self._refresh_display()
+
+    def _get_selected(self) -> str:
+        """
+        Return currently selected element.
+        """
+        return self.items[self.selected_index]
+    
+    def _get_index(self) -> int:
+        """
+        Return currently selected index.
+        """
+        return self.selected_index
 
 
 
@@ -1225,7 +1440,6 @@ class UIManager(threading.Thread):
         
         self.display.clear()
         logging.info("UI Thread Shutting Down")
-
 
 
 
