@@ -11,7 +11,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Any
+from typing import Dict, List, Optional, Type, Any, Union
 
 
 class ActionParam:
@@ -207,6 +207,54 @@ class Control(Enum):
 
 
 
+class PotEvent(Enum):
+    CHANGE_VALUE = auto()
+    CHANGE_DIRECTION = auto()
+    ON_MIN = auto()
+    LEAVE_MIN = auto()
+    ON_MAX = auto()
+    LEAVE_MAX = auto()
+    STOP_CHANGING = auto()
+
+
+
+class BaseControlModel(ABC):
+    def __init__(self, control_type: Control, actions:Dict[ButtonEvent, Action]={}):
+        self.control_type = control_type
+        self.actions = actions
+
+    def to_dict(self) -> dict:
+        return {
+            "control_type": str(self.control_type),
+            "actions": {str(k): v.to_dict() for k, v in self.actions.items()}
+        }
+
+    @classmethod    
+    def from_dict(cls, data: dict) -> 'BaseControlModel':
+        name = data["control_type"].split(".")[-1]
+        control_type = Control[name]
+        instance = cls(control_type)
+        return instance
+
+class ButtonControlModel(BaseControlModel):
+    def __init__(self, control_type: Control, actions:Dict[ButtonEvent, Action]={}):
+        super().__init__(control_type, actions)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'ButtonControlModel':
+        instance = super().from_dict(data)
+        instance.actions = {ButtonEvent[k.split(".")[-1]]: Action.from_dict(v) for k, v in data["actions"].items()}
+        return instance
+
+class PotControlModel(BaseControlModel):
+    def __init__(self, control_type: Control, actions:Dict[PotEvent, Action]={}):
+        super().__init__(control_type, actions)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'PotControlModel':
+        instance = super().from_dict(data)
+        instance.actions = {PotEvent[k.split(".")[-1]]: Action.from_dict(v) for k, v in data["actions"].items()}
+        return instance
 
 
 
@@ -214,14 +262,16 @@ class Control(Enum):
 
 
 class Preset:
-    def __init__(self, name: str, controls: Dict[Control, Action] = None):
+    def __init__(self, name: str, controls: Dict[Control, Action] = None, controls2: Dict[Control, BaseControlModel] = None):
         self.name = name
         self.controls = controls or {}
+        self.controls2 = controls2 or {}
 
     def to_dict(self):
         return {
             "name": self.name,
-            "controls": {str(k): v.to_dict() for k, v in self.controls.items()}
+            "controls": {str(k): v.to_dict() for k, v in self.controls.items()},
+            "controls2": {str(k): v.to_dict() for k, v in self.controls2.items()}
         }
 
     @classmethod
@@ -232,7 +282,12 @@ class Preset:
             action = Action.from_dict(action_data, context=context)
             member_name = ctrl_name.split(".")[-1]
             controls[Control[member_name]] = action
-        return cls(name=name, controls=controls)
+        controls2 = {}
+        for ctrl_name, model_data in data.get("controls2", {}).items():
+            model = BaseControlModel.from_dict(model_data)
+            member_name = ctrl_name.split(".")[-1]
+            controls2[Control[member_name]] = model
+        return cls(name=name, controls=controls, controls2=controls2)
 
 class Bank:
     def __init__(self, name: str, preset_numbers: List[int] = None):
@@ -1470,7 +1525,34 @@ class DataContext:
                 Control.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=device_context),
                 Control.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=device_context),
             }
-            self.preset = Preset(name="Default Preset", controls=controls)
+            controls2 = {
+                Control.BUTTON_1: ButtonControlModel(control_type=Control.BUTTON_1, actions={
+                    ButtonEvent.PRESS: InfoAction(info="Button 1 Pressed", context=device_context),
+                    ButtonEvent.RELEASE: InfoAction(info="Button 1 Released", context=device_context),
+                }),
+                Control.BUTTON_2: ButtonControlModel(control_type=Control.BUTTON_2, actions={
+                    ButtonEvent.PRESS: InfoAction(info="Button 2 Pressed", context=device_context),
+                    ButtonEvent.RELEASE: InfoAction(info="Button 2 Released", context=device_context),
+                }),
+                Control.BUTTON_3: ButtonControlModel(control_type=Control.BUTTON_3, actions={
+                    ButtonEvent.PRESS: InfoAction(info="Button 3 Pressed", context=device_context),
+                    ButtonEvent.RELEASE: InfoAction(info="Button 3 Released", context=device_context),
+                }),
+                Control.BUTTON_4: ButtonControlModel(control_type=Control.BUTTON_4, actions={
+                    ButtonEvent.PRESS: InfoAction(info="Button 4 Pressed", context=device_context),
+                    ButtonEvent.RELEASE: InfoAction(info="Button 4 Released", context=device_context),
+                }),
+                Control.EXP_PEDAL_1: PotControlModel(control_type=Control.EXP_PEDAL_1, actions={
+                    PotEvent.CHANGE_VALUE: InfoAction(info="Exp Pedal 1 Active", context=device_context),
+                    PotEvent.ON_MIN: InfoAction(info="Exp Pedal 1 Inactive", context=device_context),
+                }),
+                Control.EXP_PEDAL_2: PotControlModel(control_type=Control.EXP_PEDAL_2, actions={
+                    PotEvent.CHANGE_VALUE: InfoAction(info="Exp Pedal 2 Active", context=device_context),
+                    PotEvent.ON_MIN: InfoAction(info="Exp Pedal 2 Inactive", context=device_context),
+                }),
+            }
+
+            self.preset = Preset(name="Default Preset", controls=controls, controls2=controls2)
             self.current_preset_index = 0
 
     def save_current_preset(self):

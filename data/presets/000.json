@@ -2,13 +2,8 @@
     "name": "Default Preset",
     "controls": {
         "Control.BUTTON_1": {
-            "type": "composite",
-            "actions": [
-                {
-                    "type": "cc",
-                    "cc": 109
-                }
-            ]
+            "type": "info",
+            "info": "Button 1 Pressed"
         },
         "Control.BUTTON_2": {
             "type": "info",
@@ -29,6 +24,86 @@
         "Control.EXP_PEDAL_2": {
             "type": "info",
             "info": "Exp Pedal 2 Act"
+        }
+    },
+    "controls2": {
+        "Control.BUTTON_1": {
+            "control_type": "Control.BUTTON_1",
+            "actions": {
+                "ButtonEvent.PRESS": {
+                    "type": "info",
+                    "info": "Button 1 Pressed"
+                },
+                "ButtonEvent.RELEASE": {
+                    "type": "info",
+                    "info": "Button 1 Released"
+                }
+            }
+        },
+        "Control.BUTTON_2": {
+            "control_type": "Control.BUTTON_2",
+            "actions": {
+                "ButtonEvent.PRESS": {
+                    "type": "info",
+                    "info": "Button 2 Pressed"
+                },
+                "ButtonEvent.RELEASE": {
+                    "type": "info",
+                    "info": "Button 2 Released"
+                }
+            }
+        },
+        "Control.BUTTON_3": {
+            "control_type": "Control.BUTTON_3",
+            "actions": {
+                "ButtonEvent.PRESS": {
+                    "type": "info",
+                    "info": "Button 3 Pressed"
+                },
+                "ButtonEvent.RELEASE": {
+                    "type": "info",
+                    "info": "Button 3 Released"
+                }
+            }
+        },
+        "Control.BUTTON_4": {
+            "control_type": "Control.BUTTON_4",
+            "actions": {
+                "ButtonEvent.PRESS": {
+                    "type": "info",
+                    "info": "Button 4 Pressed"
+                },
+                "ButtonEvent.RELEASE": {
+                    "type": "info",
+                    "info": "Button 4 Released"
+                }
+            }
+        },
+        "Control.EXP_PEDAL_1": {
+            "control_type": "Control.EXP_PEDAL_1",
+            "actions": {
+                "PotEvent.CHANGE_VALUE": {
+                    "type": "info",
+                    "info": "Exp Pedal 1 Active"
+                },
+                "PotEvent.ON_MIN": {
+                    "type": "info",
+                    "info": "Exp Pedal 1 Inactive"
+                }
+            }
+        },
+        "Control.EXP_PEDAL_2": {
+            "control_type": "Control.EXP_PEDAL_2",
+            "actions": {
+                "PotEvent.CHANGE_VALUE": {
+                    "type": "info",
+                    "info": "Exp Pedal 2 Active"
+                },
+                "PotEvent.ON_MIN": {
+                    "type": "info",
+                    "info": "Exp Pedal 2 Inactive"
+                }
+            }
         }
     }
 }
