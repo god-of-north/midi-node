@@ -28,7 +28,7 @@
     },
     "controls2": {
         "Control.BUTTON_1": {
-            "control_type": "Control.BUTTON_1",
+            "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
@@ -41,7 +41,7 @@
             }
         },
         "Control.BUTTON_2": {
-            "control_type": "Control.BUTTON_2",
+            "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
@@ -54,7 +54,7 @@
             }
         },
         "Control.BUTTON_3": {
-            "control_type": "Control.BUTTON_3",
+            "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
@@ -67,7 +67,7 @@
             }
         },
         "Control.BUTTON_4": {
-            "control_type": "Control.BUTTON_4",
+            "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
@@ -80,7 +80,7 @@
             }
         },
         "Control.EXP_PEDAL_1": {
-            "control_type": "Control.EXP_PEDAL_1",
+            "control_type": "ControlType.POTENTIOMETER",
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
@@ -93,7 +93,7 @@
             }
         },
         "Control.EXP_PEDAL_2": {
-            "control_type": "Control.EXP_PEDAL_2",
+            "control_type": "ControlType.POTENTIOMETER",
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",

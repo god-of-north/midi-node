@@ -217,11 +217,16 @@ class PotEvent(Enum):
     STOP_CHANGING = auto()
 
 
+class ControlType(Enum):
+    BUTTON = auto()
+    POTENTIOMETER = auto()
+
 
 class BaseControlModel(ABC):
-    def __init__(self, control_type: Control, actions:Dict[ButtonEvent, Action]={}):
+    def __init__(self, control_type: ControlType, actions:Dict[ButtonEvent, Action]={}, context: 'DeviceContext'=None):
         self.control_type = control_type
         self.actions = actions
+        self.context = context
 
     def to_dict(self) -> dict:
         return {
@@ -229,31 +234,36 @@ class BaseControlModel(ABC):
             "actions": {str(k): v.to_dict() for k, v in self.actions.items()}
         }
 
-    @classmethod    
-    def from_dict(cls, data: dict) -> 'BaseControlModel':
+    @classmethod
+    def from_dict(cls, data: dict, context: 'DeviceContext') -> 'BaseControlModel':
         name = data["control_type"].split(".")[-1]
-        control_type = Control[name]
-        instance = cls(control_type)
+        control_type = ControlType[name]
+        if control_type == ControlType.BUTTON:
+            instance = ButtonControlModel.from_dict(data, context=context)
+        elif control_type == ControlType.POTENTIOMETER:
+            instance = PotControlModel.from_dict(data, context=context)
+        else:
+            instance = cls(control_type)
         return instance
 
 class ButtonControlModel(BaseControlModel):
-    def __init__(self, control_type: Control, actions:Dict[ButtonEvent, Action]={}):
-        super().__init__(control_type, actions)
+    def __init__(self, control_type: ControlType, actions:Dict[ButtonEvent, Action]={}, context: 'DeviceContext'=None):
+        super().__init__(control_type, actions, context=context)
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'ButtonControlModel':
-        instance = super().from_dict(data)
-        instance.actions = {ButtonEvent[k.split(".")[-1]]: Action.from_dict(v) for k, v in data["actions"].items()}
+    def from_dict(cls, data: dict, context: 'DeviceContext') -> 'ButtonControlModel':
+        actions = {ButtonEvent[k.split(".")[-1]]: Action.from_dict(v, context=context) for k, v in data["actions"].items()}
+        instance = cls(control_type=ControlType.BUTTON, actions=actions, context=context)
         return instance
 
 class PotControlModel(BaseControlModel):
-    def __init__(self, control_type: Control, actions:Dict[PotEvent, Action]={}):
-        super().__init__(control_type, actions)
+    def __init__(self, control_type: ControlType, actions:Dict[PotEvent, Action]={}, context: 'DeviceContext'=None):
+        super().__init__(control_type, actions, context=context)
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'PotControlModel':
-        instance = super().from_dict(data)
-        instance.actions = {PotEvent[k.split(".")[-1]]: Action.from_dict(v) for k, v in data["actions"].items()}
+    def from_dict(cls, data: dict, context: 'DeviceContext') -> 'PotControlModel':
+        actions = {PotEvent[k.split(".")[-1]]: Action.from_dict(v, context=context) for k, v in data["actions"].items()}
+        instance = cls(control_type=ControlType.POTENTIOMETER, actions=actions, context=context)
         return instance
 
 
@@ -284,7 +294,7 @@ class Preset:
             controls[Control[member_name]] = action
         controls2 = {}
         for ctrl_name, model_data in data.get("controls2", {}).items():
-            model = BaseControlModel.from_dict(model_data)
+            model = BaseControlModel.from_dict(model_data, context=context)
             member_name = ctrl_name.split(".")[-1]
             controls2[Control[member_name]] = model
         return cls(name=name, controls=controls, controls2=controls2)
@@ -1526,27 +1536,27 @@ class DataContext:
                 Control.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=device_context),
             }
             controls2 = {
-                Control.BUTTON_1: ButtonControlModel(control_type=Control.BUTTON_1, actions={
+                Control.BUTTON_1: ButtonControlModel(control_type=ControlType.BUTTON, actions={
                     ButtonEvent.PRESS: InfoAction(info="Button 1 Pressed", context=device_context),
                     ButtonEvent.RELEASE: InfoAction(info="Button 1 Released", context=device_context),
                 }),
-                Control.BUTTON_2: ButtonControlModel(control_type=Control.BUTTON_2, actions={
+                Control.BUTTON_2: ButtonControlModel(control_type=ControlType.BUTTON, actions={
                     ButtonEvent.PRESS: InfoAction(info="Button 2 Pressed", context=device_context),
                     ButtonEvent.RELEASE: InfoAction(info="Button 2 Released", context=device_context),
                 }),
-                Control.BUTTON_3: ButtonControlModel(control_type=Control.BUTTON_3, actions={
+                Control.BUTTON_3: ButtonControlModel(control_type=ControlType.BUTTON, actions={
                     ButtonEvent.PRESS: InfoAction(info="Button 3 Pressed", context=device_context),
                     ButtonEvent.RELEASE: InfoAction(info="Button 3 Released", context=device_context),
                 }),
-                Control.BUTTON_4: ButtonControlModel(control_type=Control.BUTTON_4, actions={
+                Control.BUTTON_4: ButtonControlModel(control_type=ControlType.BUTTON, actions={
                     ButtonEvent.PRESS: InfoAction(info="Button 4 Pressed", context=device_context),
                     ButtonEvent.RELEASE: InfoAction(info="Button 4 Released", context=device_context),
                 }),
-                Control.EXP_PEDAL_1: PotControlModel(control_type=Control.EXP_PEDAL_1, actions={
+                Control.EXP_PEDAL_1: PotControlModel(control_type=ControlType.POTENTIOMETER, actions={
                     PotEvent.CHANGE_VALUE: InfoAction(info="Exp Pedal 1 Active", context=device_context),
                     PotEvent.ON_MIN: InfoAction(info="Exp Pedal 1 Inactive", context=device_context),
                 }),
-                Control.EXP_PEDAL_2: PotControlModel(control_type=Control.EXP_PEDAL_2, actions={
+                Control.EXP_PEDAL_2: PotControlModel(control_type=ControlType.POTENTIOMETER, actions={
                     PotEvent.CHANGE_VALUE: InfoAction(info="Exp Pedal 2 Active", context=device_context),
                     PotEvent.ON_MIN: InfoAction(info="Exp Pedal 2 Inactive", context=device_context),
                 }),
