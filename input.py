@@ -11,7 +11,8 @@ class ButtonEvent(Enum):
     DOUBLE_TAP = auto()
     TRIPLE_TAP = auto()
     LONG_PRESS = auto()
-
+    LONG_PRESS_RELEASE = auto()
+    
 # Mocked event to mimic gpiod event structure
 class MockEvent:
     def __init__(self, pin, event_type):
