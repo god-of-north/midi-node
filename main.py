@@ -326,10 +326,23 @@ class StorageManager:
     # --- Preset API ---
 
     def save_preset(self, number: int, preset: Preset):
-        path = self._get_preset_path(number)
-        with open(path, 'w') as f:
-            preset_dict = preset.to_dict()
-            json.dump(preset_dict, f, indent=4)
+        try:
+            # firstly save data to temp file then move to avoid corruption
+            temp_path = self._get_preset_path(number).with_suffix(".tmp")
+            if temp_path.exists():
+                os.remove(temp_path)
+            with open(temp_path, 'w') as f:
+                preset_dict = preset.to_dict()
+                json.dump(preset_dict, f, indent=4)
+
+            # Move temp file to final location, replace if exists
+            final_path = self._get_preset_path(number)
+            if final_path.exists():
+                os.remove(final_path)
+            temp_path.rename(final_path)
+        except Exception as e:
+            print(f"Error saving preset to file: {e}")
+
 
     def load_preset(self, number: int) -> Optional[Preset]:
         path = self._get_preset_path(number)
@@ -402,9 +415,21 @@ class StorageManager:
         self.save_bank(number, bank)
 
     def save_bank(self, number: int, bank: Bank):
-        path = self._get_bank_path(number)
-        with open(path, 'w') as f:
-            json.dump(bank.to_dict(), f, indent=4)
+        try:
+            # firstly save data to temp file then move to avoid corruption
+            temp_path = self._get_bank_path(number).with_suffix(".tmp")
+            if temp_path.exists():
+                os.remove(temp_path)
+            with open(temp_path, 'w') as f:
+                json.dump(bank.to_dict(), f, indent=4)
+
+            # Move temp file to final location, replace if exists
+            final_path = self._get_bank_path(number)
+            if final_path.exists():
+                os.remove(final_path)
+            temp_path.rename(final_path)
+        except Exception as e:
+            print(f"Error saving bank to file: {e}")
 
     def load_bank(self, number: int) -> Optional[Bank]:
         path = self._get_bank_path(number)
