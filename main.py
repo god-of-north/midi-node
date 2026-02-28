@@ -272,32 +272,25 @@ class PotControlModel(BaseControlModel):
 
 
 class Preset:
-    def __init__(self, name: str, controls: Dict[Control, Action] = None, controls2: Dict[Control, BaseControlModel] = None):
+    def __init__(self, name: str, controls: Dict[Control, BaseControlModel] = None):
         self.name = name
         self.controls = controls or {}
-        self.controls2 = controls2 or {}
 
     def to_dict(self):
         return {
             "name": self.name,
-            "controls": {str(k): v.to_dict() for k, v in self.controls.items()},
-            "controls2": {str(k): v.to_dict() for k, v in self.controls2.items()}
+            "controls": {str(k): v.to_dict() for k, v in self.controls.items()}
         }
 
     @classmethod
     def from_dict(cls, data: dict, context: 'DeviceContext'):
         name = data.get("name", "[Unnamed]")
         controls = {}
-        for ctrl_name, action_data in data.get("controls", {}).items():
-            action = Action.from_dict(action_data, context=context)
-            member_name = ctrl_name.split(".")[-1]
-            controls[Control[member_name]] = action
-        controls2 = {}
-        for ctrl_name, model_data in data.get("controls2", {}).items():
+        for ctrl_name, model_data in data.get("controls", {}).items():
             model = BaseControlModel.from_dict(model_data, context=context)
             member_name = ctrl_name.split(".")[-1]
-            controls2[Control[member_name]] = model
-        return cls(name=name, controls=controls, controls2=controls2)
+            controls[Control[member_name]] = model
+        return cls(name=name, controls=controls)
 
 class Bank:
     def __init__(self, name: str, preset_numbers: List[int] = None):
@@ -928,12 +921,13 @@ class ActionParamEnumSelectorState(EnumSelectorState):
         self.param = param
 
 class ActionSelectorState(MenuState):
-    def __init__(self, context, button_id):
+    def __init__(self, context, control_id: Control, control_event: Enum):
         super().__init__(context)
 
-        self.button_id = button_id
+        self.control_id = control_id
+        self.control_event = control_event
+    
         self.action_types: Dict[str, ActionRegistryEntry] = {}
-
         action_types = ActionRegistry.get_keys()
         for action_type in action_types:
             action_info = ActionRegistry.get_registered(action_type)
@@ -945,11 +939,12 @@ class ActionSelectorState(MenuState):
         if event.type == EventType.ENCODER_SELECT:
             selected = self._get_selected()
             new_action_type = self.action_types[selected]
-            
-            existing_action = self.context.data.preset.controls.get(self.button_id, None)
+
+            control = self.context.data.preset.controls.get(self.control_id, None)
+            existing_action:Action = control.actions.get(self.control_event, None)
             if not existing_action or existing_action.__class__ != new_action_type.action_cls:
                 # Create new action
-                self.context.data.preset.controls[self.button_id] = new_action_type.action_cls(context=self.context)
+                control.actions[self.control_event] = new_action_type.action_cls(context=self.context)
 
             self.return_to_previous()
         else:
@@ -1075,25 +1070,30 @@ class ActionEditorState(MenuState):
             self.action = None
 
 class ButtonSettingsMenuState(MenuState):
-    def __init__(self, context, button_id):
+    def __init__(self, context, control_id: Control, control_event: Enum):
         super().__init__(context)
-        self.button_id = button_id
+        self.control_id = control_id
+        self.control_event = control_event
 
     def on_enter(self):
-        if not self.button_id:
+        if not self.control_id:
             self.return_to_previous()
             return
 
-        action = self.context.data.preset.controls.get(self.button_id, None)
+        control = self.context.data.preset.controls.get(self.control_id, None)
+        if not control:
+            self.return_to_previous()
+            return
+        
+        action: Action = control.actions.get(self.control_event, None)
         if not action:
-            # TODO transition to action creation page
             self.return_to_previous()
             return
 
         params = action.params
 
         self.transitions = {}
-        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState, "args": {"button_id": self.button_id}}
+        self.transitions["Type: "+getattr(action, "TITLE", "Unknown")] = {"class": ActionSelectorState, "args": {"control_id": self.control_id, "control_event": self.control_event}}
         for key, param in params.items():
             transition = {"class": DummyState}
             display_value = param.value
@@ -1161,17 +1161,44 @@ class SavePresetState(StringCreatorState):
             self.context.ui.write_ui(f"Preset Saved as \r\n'{preset_name}'", 0, 1, True)
             time.sleep(1.5)
 
+class ControlSettingsMenuState(MenuState):
+    def __init__(self, context, control_id:Control):
+        super().__init__(context)
+        self.control_id = control_id
+    
+    def on_enter(self):
+        control = self.context.data.preset.controls[self.control_id]
+
+        self.transitions = {}
+        for control_event in control.actions.keys():
+            self.transitions[f"Setup {control_event.name}"] = {"class": ButtonSettingsMenuState, "args": {"control_id": self.control_id, "control_event": control_event}}
+        self.transitions["Back"] = None
+
+        self.items = list(self.transitions.keys())
+        super().on_enter()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            new_state = self.transitions[selected]
+            if new_state is not None:
+                self.transition_to(new_state["class"], **new_state.get("args", {}))
+            else:
+                self.return_to_previous()
+        else:
+            super().handle_event(event)
+
 class SettingsMenuState(MenuState):
     def __init__(self, context):
         super().__init__(context)
 
         self.transitions = {
-            "Setup Button 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_1}},
-            "Setup Button 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_2}},
-            "Setup Button 3": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_3}},
-            "Setup Button 4": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.BUTTON_4}},
-            "Setup Exp Pedal 1": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.EXP_PEDAL_1}},
-            "Setup Exp Pedal 2": {"class": ButtonSettingsMenuState, "args": {"button_id": Control.EXP_PEDAL_2}},
+            "Setup Button 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_1}},
+            "Setup Button 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_2}},
+            "Setup Button 3": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_3}},
+            "Setup Button 4": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_4}},
+            "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
+            "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
             "Save Preset": {"class": SavePresetState},
             "Clone Preset": {"class": DummyState},
             "Delete Preset": {"class": DummyState},
@@ -1443,12 +1470,12 @@ class MockLCD(DisplayProvider):
 
 class InputManager(threading.Thread):
     """Monitors GPIO pins and puts events into the queue."""
-    def __init__(self, event_queue: queue.Queue, shutdown_event: threading.Event, actions: dict[Control, Action]):
+    def __init__(self, event_queue: queue.Queue, shutdown_event: threading.Event, controls:Dict[Control, BaseControlModel]):
         super().__init__(daemon=True)
         self.queue = event_queue
         self.shutdown = shutdown_event
         self.input_handler = KeyboardInputManager()
-        self.actions = actions
+        self.controls = controls
 
         def encoder_callback(direction):
             if direction == 1:
@@ -1465,9 +1492,13 @@ class InputManager(threading.Thread):
             Control.BUTTON_3: '3',
             Control.BUTTON_4: '4',
         }
-        for control, action in actions.items():
-            if control in key_map.keys():
-                self.input_handler.add_button(key_map[control], {ButtonEvent.PRESS: (lambda c=control: actions[c].execute())})
+
+        for control, button in key_map.items():
+            self.input_handler.add_button(button, {
+                ButtonEvent.PRESS: (lambda c=control: self.controls[c].actions[ButtonEvent.PRESS].execute()),
+                ButtonEvent.RELEASE: (lambda c=control: self.controls[c].actions[ButtonEvent.RELEASE].execute()),
+            })
+
 
     def run(self):
         logging.info("Input Thread Started")
@@ -1528,14 +1559,6 @@ class DataContext:
             self.preset = self.storage.load_preset(self.current_preset_index) 
         else:
             controls = {
-                Control.BUTTON_1: InfoAction(info="Button 1 Pressed", context=device_context),
-                Control.BUTTON_2: InfoAction(info="Button 2 Pressed", context=device_context),
-                Control.BUTTON_3: InfoAction(info="Button 3 Pressed", context=device_context),
-                Control.BUTTON_4: InfoAction(info="Button 4 Pressed", context=device_context),
-                Control.EXP_PEDAL_1: InfoAction(info="Exp Pedal 1 Act", context=device_context),
-                Control.EXP_PEDAL_2: InfoAction(info="Exp Pedal 2 Act", context=device_context),
-            }
-            controls2 = {
                 Control.BUTTON_1: ButtonControlModel(control_type=ControlType.BUTTON, actions={
                     ButtonEvent.PRESS: InfoAction(info="Button 1 Pressed", context=device_context),
                     ButtonEvent.RELEASE: InfoAction(info="Button 1 Released", context=device_context),
@@ -1562,7 +1585,7 @@ class DataContext:
                 }),
             }
 
-            self.preset = Preset(name="Default Preset", controls=controls, controls2=controls2)
+            self.preset = Preset(name="Default Preset", controls=controls)
             self.current_preset_index = 0
 
     def save_current_preset(self):

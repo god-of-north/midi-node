@@ -2,37 +2,20 @@
     "name": "Default Preset",
     "controls": {
         "Control.BUTTON_1": {
-            "type": "info",
-            "info": "Button 1 Pressed"
-        },
-        "Control.BUTTON_2": {
-            "type": "info",
-            "info": "Button 2 Pressed"
-        },
-        "Control.BUTTON_3": {
-            "type": "info",
-            "info": "Button 3 Pressed"
-        },
-        "Control.BUTTON_4": {
-            "type": "info",
-            "info": "Button 4 Pressed"
-        },
-        "Control.EXP_PEDAL_1": {
-            "type": "info",
-            "info": "Exp Pedal 1 Act"
-        },
-        "Control.EXP_PEDAL_2": {
-            "type": "info",
-            "info": "Exp Pedal 2 Act"
-        }
-    },
-    "controls2": {
-        "Control.BUTTON_1": {
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "Button 1 Pressed"
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "cc",
+                            "cc": 127
+                        },
+                        {
+                            "type": "info",
+                            "info": "Info"
+                        }
+                    ]
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
