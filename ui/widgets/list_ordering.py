@@ -1,5 +1,5 @@
 from typing import List
-from MockLCD import CharLCD
+from display.MockLCD import CharLCD
 
 
 class ListOrdering:
@@ -105,24 +105,3 @@ class ListOrdering:
         Return reordered list.
         """
         return self.items
-
-
-if __name__ == "__main__":
-    import time
-
-    c = CharLCD()
-    c.clear()
-
-    items = ["Kick", "Snare", "HiHat", "Bass", "Lead", "Pad"]
-
-    ordering = ListOrdering(c, items, x=0, y=0)
-    ordering.draw()
-
-    time.sleep(0.5)
-    ordering.down()
-    time.sleep(0.5)
-    ordering.down()
-    time.sleep(0.5)
-    ordering.up()
-
-    print("\nResult:", ordering.get_selected())

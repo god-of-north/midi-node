@@ -1,18 +1,8 @@
 import time
 import keyboard
-from enum import Enum, auto
 from collections import deque
+from .button_event import ButtonEvent
 
-# Keep the Enum identical to your hardware code
-class ButtonEvent(Enum):
-    PRESS = auto()
-    RELEASE = auto()
-    TAP = auto()
-    DOUBLE_TAP = auto()
-    TRIPLE_TAP = auto()
-    LONG_PRESS = auto()
-    LONG_PRESS_RELEASE = auto()
-    
 # Mocked event to mimic gpiod event structure
 class MockEvent:
     def __init__(self, pin, event_type):
@@ -129,31 +119,3 @@ class KeyboardInputManager:
                     self._fire(data, event)
                     data["tap_count"] = 0
                     data["tap_timer_start"] = None
-
-
-
-# Example Usage
-if __name__ == "__main__":
-    # Mock actions
-    my_actions = {
-        ButtonEvent.TAP: lambda: print("--- Single Tap! ---"),
-        ButtonEvent.DOUBLE_TAP: lambda: print("--- Double Tap!! ---"),
-        ButtonEvent.LONG_PRESS: lambda: print("--- Long Press ---"),
-        ButtonEvent.PRESS: lambda: print("--- Button Pressed ---"),
-        ButtonEvent.RELEASE: lambda: print("--- Button Released ---"),
-        ButtonEvent.TRIPLE_TAP: lambda: print("--- Triple Tap!!! ---"),
-    }
-
-    manager = KeyboardInputManager()
-    manager.add_button('z', my_actions)  # Map 'z' key to button actions
-
-    def encoder_callback(direction):
-        if direction == 1:
-            print("Encoder turned RIGHT")
-        else:
-            print("Encoder turned LEFT")
-
-    manager.add_encoder('left', 'right', encoder_callback)  # Map left/right arrow keys to encoder
-
-    manager.start()
-    

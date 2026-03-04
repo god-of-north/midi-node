@@ -1,4 +1,4 @@
-from MockLCD import CharLCD
+from display.MockLCD import CharLCD
 
 
 class IntNumberSelector:
@@ -87,21 +87,3 @@ class IntNumberSelector:
         """
         sign = "-" if value < 0 else ""
         return f"{sign}{abs(value):0{self._num_width}d}"
-
-
-if __name__ == "__main__":
-    dispaly = CharLCD()
-    selector = IntNumberSelector(dispaly, -50, 50, header="Select a Number", x=0, y=0)
-    selector.draw()
-    import time
-    time.sleep(1)
-    for _ in range(55):
-        selector.next()
-        time.sleep(0.1)
-
-    time.sleep(1)
-
-    for _ in range(60):
-        selector.prev()
-        time.sleep(0.1)
-

@@ -1,5 +1,5 @@
 from typing import List
-from MockLCD import CharLCD
+from display.MockLCD import CharLCD
 
 
 class ParameterSelector:
@@ -67,27 +67,3 @@ class ParameterSelector:
         Return currently selected parameter value.
         """
         return self.values[self.selected_index]
-
-
-if __name__ == "__main__":
-    # Example usage
-    import time
-
-    display = CharLCD()
-    display.clear()
-
-    params = ["Param A", "Param B", "Param C", "Param D", "Param E", "Param F"]
-    selector = ParameterSelector(display, params, header="Select Parameter:", x=0, y=0)
-    selector.draw()
-
-    time.sleep(1)
-    selector.next()
-    time.sleep(1)
-    selector.next()
-    time.sleep(1)
-    selector.prev()
-    time.sleep(1)
-    selected_value = selector.get_value()
-    display.cursor_pos = (0, 6)
-    display.write_string(f"Selected: {selected_value}")
-    time.sleep(2)

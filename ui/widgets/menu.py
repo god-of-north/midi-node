@@ -1,8 +1,8 @@
 from typing import List
-from MockLCD import CharLCD
+from display.MockLCD import CharLCD
 
 
-class MenuPlacer:
+class Menu:
     MAX_LINES = 4
 
     def __init__(self, display: CharLCD, items: List[str], x: int = 0, y: int = 0):
@@ -17,7 +17,6 @@ class MenuPlacer:
 
         self.selected_index = 0   # index in items
         self.scroll_offset = 0    # first visible item index
-        self.cursor_name = "menu_cursor"
 
     # ---------- PUBLIC API ----------
 
@@ -34,11 +33,8 @@ class MenuPlacer:
                 self.display.write_string(" " * 20)
                 continue
 
-            is_selected = item_index == self.selected_index
-            item_name = self.cursor_name if is_selected else self.items[item_index]
-            line_text = f"{item_index + 1:2d}. {item_name}"
-            prefix = ">" if is_selected else " "
-            text = f"{prefix} {line_text}"
+            prefix = ">" if item_index == self.selected_index else " "
+            text = f"{prefix} {self.items[item_index]}"
 
             # Clear line leftovers
             self.display.write_string(text.ljust(20))
@@ -76,31 +72,3 @@ class MenuPlacer:
         Return currently selected element.
         """
         return self.items[self.selected_index]
-    
-    def get_selected_index(self) -> int:
-        """
-        Return index of currently selected element.
-        """
-        return self.selected_index
-
-
-if __name__ == "__main__":
-    display = CharLCD()
-    menu_items = [f"Item {i}" for i in range(1, 11)]
-    menu = MenuPlacer(display, menu_items, x=0, y=0)
-
-    menu.draw()
-    import time
-    time.sleep(1)
-
-    for _ in range(5):
-        menu.down()
-        time.sleep(1.5)
-
-    for _ in range(4):
-        menu.up()
-        time.sleep(1.5)
-
-    selected = menu.get_selected()
-    display.cursor_pos = (0, 6)
-    display.write_string(f"Selected: {selected}")
