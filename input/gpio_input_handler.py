@@ -1,11 +1,9 @@
 import gpiod
-from gpiod.line import Direction, Edge, Bias
+from gpiod.line import Direction, Edge, Bias, Value
+from gpiod import EdgeEvent  # Added for correct event type comparison
 from datetime import timedelta
 import time
 from enum import Enum, auto
-
-from input.input_handler import InputHandler
-
 
 class ButtonEvent(Enum):
     PRESS = auto()
@@ -15,41 +13,29 @@ class ButtonEvent(Enum):
     TRIPLE_TAP = auto()
     LONG_PRESS = auto()
 
-
 class RotaryEncoder:
     def __init__(self, clk_pin, dt_pin, on_rotate):
         self.clk_pin = clk_pin
         self.dt_pin = dt_pin
-        self.on_rotate = on_rotate # Callback: lambda direction: ...
-        self.last_clk_value = 1
+        self.on_rotate = on_rotate 
 
     def process(self, event, chip_request):
-        # We only trigger logic on the CLK pin changing
-        if event.line_offset == self.clk_pin:
-            # Get current values of both pins
-            # Note: request.get_values is very fast in gpiod v2
-            vals = chip_request.get_values([self.clk_pin, self.dt_pin])
-            clk_val = vals[0]
-            dt_val = vals[1]
+        # Only process on the FALLING edge of the CLK pin.
+        if event.event_type != EdgeEvent.Type.FALLING_EDGE:
+            return
 
-            if clk_val != self.last_clk_value: # Edge detected
-                if dt_val != clk_val:
-                    self.on_rotate(1)  # Clockwise
-                else:
-                    self.on_rotate(-1) # Counter-clockwise
-                self.last_clk_value = clk_val
+        dt_val = chip_request.get_value(self.dt_pin)
+        direction = 1 if dt_val == Value.ACTIVE else -1
+        self.on_rotate(direction)
 
-
-class GPIOInputHandler(InputHandler):
-    def __init__(self, debounce_ms=30):
+class GPIOInputHandler:
+    def __init__(self):
         self.chip_path = "/dev/gpiochip0"
-        self.debounce_ms = debounce_ms
-        self.buttons = {}   # pin -> GestureButton logic
-        self.encoders = {}  # clk_pin -> RotaryEncoder logic
-        self.all_pins = []        
+        self.buttons = {}
+        self.encoders = {}
+        self.all_pins = []
 
     def add_button(self, pin, actions, tap_time=0.25, long_press=0.6):
-        """Register a button without starting the loop yet."""
         self.buttons[pin] = {
             "actions": actions,
             "tap_time": tap_time,
@@ -59,7 +45,7 @@ class GPIOInputHandler(InputHandler):
             "tap_timer_start": None,
             "long_press_fired": False
         }
-        self.all_pins.append(pin)
+        if pin not in self.all_pins: self.all_pins.append(pin)
 
     def add_encoder(self, clk_pin, dt_pin, callback):
         encoder = RotaryEncoder(clk_pin, dt_pin, callback)
@@ -69,35 +55,32 @@ class GPIOInputHandler(InputHandler):
 
     def _fire(self, pin_data, event_type: ButtonEvent):
         action = pin_data["actions"].get(event_type)
-        if action:
-            action()
+        if action: action()
 
     def start(self):
-        # Configure ALL pins (Buttons and Encoder pins)
         configs = {}
         for pin in self.all_pins:
+            # We use Edge.BOTH for everything, but filter inside the logic
             configs[pin] = gpiod.LineSettings(
                 direction=Direction.INPUT,
                 bias=Bias.PULL_UP,
                 edge_detection=Edge.BOTH,
-                # Encoder pins need VERY low debounce or NONE to catch fast spins
-                debounce_period=timedelta(milliseconds=2 if pin in self.encoders else 30)
+                debounce_period=timedelta(milliseconds=5) 
             )
 
-        with gpiod.request_lines("/dev/gpiochip0", consumer="multi_ctrl", config=configs) as request:
+        with gpiod.request_lines(self.chip_path, consumer="multi_ctrl", config=configs) as request:
             while True:
-                if request.wait_edge_events(timedelta(milliseconds=50)):
+                # Wait for events with a short timeout to allow check_all_timeouts to run
+                if request.wait_edge_events(timedelta(milliseconds=10)):
                     for event in request.read_edge_events():
-                        # Dispatch to Encoder
-                        if event.line_offset in self.encoders:
-                            self.encoders[event.line_offset].process(event, request)
+                        pin = event.line_offset
                         
-                        # Dispatch to Button logic
-                        elif event.line_offset in self.buttons:
+                        if pin in self.encoders:
+                            self.encoders[pin].process(event, request)
+                        
+                        elif pin in self.buttons:
                             self._handle_hardware_event(event)
-                            pass
                 
-                # Check timeouts for all buttons (Long press / Tap release)
                 self._check_all_timeouts()
 
     def _handle_hardware_event(self, event):
@@ -105,16 +88,17 @@ class GPIOInputHandler(InputHandler):
         data = self.buttons[pin]
         now = time.time()
 
-        if event.event_type == Edge.FALLING: # Press
+        # gpiod v2 uses EdgeEvent.Type for event.event_type
+        if event.event_type == EdgeEvent.Type.FALLING_EDGE:  # Press (Active Low)
             data["press_timestamp"] = now
             data["long_press_fired"] = False
             self._fire(data, ButtonEvent.PRESS)
         
-        elif event.event_type == Edge.RISING: # Release
+        elif event.event_type == EdgeEvent.Type.RISING_EDGE:  # Release
             if data["press_timestamp"]:
                 duration = now - data["press_timestamp"]
                 self._fire(data, ButtonEvent.RELEASE)
-                if duration < data["long_press_time"]:
+                if not data["long_press_fired"]:
                     data["tap_count"] += 1
                     data["tap_timer_start"] = now
                 data["press_timestamp"] = None
@@ -122,20 +106,37 @@ class GPIOInputHandler(InputHandler):
     def _check_all_timeouts(self):
         now = time.time()
         for pin, data in self.buttons.items():
-            # Long Press logic
+            # Handle Long Press while button is still held
             if data["press_timestamp"] and not data["long_press_fired"]:
                 if (now - data["press_timestamp"]) >= data["long_press_time"]:
                     data["long_press_fired"] = True
                     data["tap_count"] = 0
                     self._fire(data, ButtonEvent.LONG_PRESS)
 
-            # Tap/Multi-tap logic
+            # Handle Tap timeout
             if data["tap_count"] > 0 and data["tap_timer_start"]:
                 if (now - data["tap_timer_start"]) > data["tap_time"]:
                     gestures = {1: ButtonEvent.TAP, 2: ButtonEvent.DOUBLE_TAP, 3: ButtonEvent.TRIPLE_TAP}
-                    # Trigger the specific multi-tap or default to TRIPLE_TAP
                     event = gestures.get(data["tap_count"], ButtonEvent.TRIPLE_TAP)
                     self._fire(data, event)
                     data["tap_count"] = 0
                     data["tap_timer_start"] = None
 
+if __name__ == "__main__":
+    handler = GPIOInputHandler()
+    
+    def encoder_callback(direction):
+        print(f"Rotation: {'CW' if direction == 1 else 'CCW'}")
+
+    handler.add_encoder(clk_pin=17, dt_pin=18, callback=encoder_callback)
+    handler.add_button(pin=27, actions={
+        ButtonEvent.TAP: lambda: print("Button: Tap"),
+        ButtonEvent.DOUBLE_TAP: lambda: print("Button: Double Tap"),
+        ButtonEvent.LONG_PRESS: lambda: print("Button: Long Press"),
+        ButtonEvent.PRESS: lambda: print("Button: Press"),
+        ButtonEvent.RELEASE: lambda: print("Button: Release"),
+        ButtonEvent.TRIPLE_TAP: lambda: print("Button: Triple Tap"),
+    })
+
+    print("Listening... Press Ctrl+C to stop.")
+    handler.start()
