@@ -3,7 +3,7 @@ from display.MockLCD import CharLCD
 
 
 class CharacterSelector:
-    VISIBLE_WIDTH = 40
+    VISIBLE_WIDTH = 20
 
     def __init__(
         self,

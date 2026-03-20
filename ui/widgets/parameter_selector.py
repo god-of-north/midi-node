@@ -3,7 +3,7 @@ from display.MockLCD import CharLCD
 
 
 class ParameterSelector:
-    LINE_WIDTH = 40
+    LINE_WIDTH = 20
 
     def __init__(
         self,

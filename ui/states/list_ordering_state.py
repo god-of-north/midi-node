@@ -4,7 +4,7 @@ from core.device_event import EventType
 
 class ListOrderingState(DeviceState):
     MAX_LINES = 4
-    LINE_WIDTH = 40
+    LINE_WIDTH = 20
 
     def __init__(self, context, items:List[str]=None, current_index:int=0):
         super().__init__(context)

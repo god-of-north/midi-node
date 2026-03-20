@@ -12,13 +12,7 @@ class DisplayFactory:
             from .mock_lcd import MockLCD
             return MockLCD()
         elif display_type == DisplayType.LCD2004:
-            from RPLCD.i2c import CharLCD
-            return CharLCD(
-                i2c_expander='PCF8574',
-                address=0x27,
-                port=1,
-                cols=20,
-                rows=4
-            )
+            from .lcd2004 import LCD2004
+            return LCD2004()
         else:
             raise ValueError(f"Unknown display type: {display_type}")

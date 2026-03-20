@@ -2,7 +2,7 @@ from display.MockLCD import CharLCD
 
 
 class IntNumberSelector:
-    LINE_WIDTH = 40
+    LINE_WIDTH = 20
 
     def __init__(
         self,

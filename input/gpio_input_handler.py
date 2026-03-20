@@ -1,3 +1,4 @@
+import logging
 import gpiod
 from gpiod.line import Direction, Edge, Bias, Value
 from gpiod import EdgeEvent  # Added for correct event type comparison
@@ -5,13 +6,17 @@ from datetime import timedelta
 import time
 from enum import Enum, auto
 
-class ButtonEvent(Enum):
-    PRESS = auto()
-    RELEASE = auto()
-    TAP = auto()
-    DOUBLE_TAP = auto()
-    TRIPLE_TAP = auto()
-    LONG_PRESS = auto()
+from .button_event import ButtonEvent
+from .input_handler import InputHandler
+
+
+# class ButtonEvent(Enum):
+#     PRESS = auto()
+#     RELEASE = auto()
+#     TAP = auto()
+#     DOUBLE_TAP = auto()
+#     TRIPLE_TAP = auto()
+#     LONG_PRESS = auto()
 
 class RotaryEncoder:
     def __init__(self, clk_pin, dt_pin, on_rotate):
@@ -28,7 +33,7 @@ class RotaryEncoder:
         direction = 1 if dt_val == Value.ACTIVE else -1
         self.on_rotate(direction)
 
-class GPIOInputHandler:
+class GPIOInputHandler(InputHandler):
     def __init__(self):
         self.chip_path = "/dev/gpiochip0"
         self.buttons = {}
@@ -36,6 +41,8 @@ class GPIOInputHandler:
         self.all_pins = []
 
     def add_button(self, pin, actions, tap_time=0.25, long_press=0.6):
+        logging.info(f"Adding button on pin {pin} with actions: {actions}")
+
         self.buttons[pin] = {
             "actions": actions,
             "tap_time": tap_time,
@@ -54,10 +61,17 @@ class GPIOInputHandler:
         if dt_pin not in self.all_pins: self.all_pins.append(dt_pin)
 
     def _fire(self, pin_data, event_type: ButtonEvent):
-        action = pin_data["actions"].get(event_type)
-        if action: action()
+        logging.info(f"Firing event {event_type} for pin with actions: {pin_data['actions']}")
 
-    def start(self):
+        action = pin_data["actions"].get(event_type)
+        logging.info(f"Action for event {event_type}: {action}")
+        if action: 
+            logging.info(f"Executing action for event {event_type}")
+            action()
+        else:
+            logging.info(f"No action defined for event {event_type}")
+
+    def start(self, shutdown_event=None):
         configs = {}
         for pin in self.all_pins:
             # We use Edge.BOTH for everything, but filter inside the logic
@@ -69,7 +83,7 @@ class GPIOInputHandler:
             )
 
         with gpiod.request_lines(self.chip_path, consumer="multi_ctrl", config=configs) as request:
-            while True:
+            while not (shutdown_event and shutdown_event.is_set()):
                 # Wait for events with a short timeout to allow check_all_timeouts to run
                 if request.wait_edge_events(timedelta(milliseconds=10)):
                     for event in request.read_edge_events():

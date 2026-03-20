@@ -4,7 +4,7 @@ from display.MockLCD import CharLCD
 
 class ListOrdering:
     MAX_LINES = 4
-    LINE_WIDTH = 40
+    LINE_WIDTH = 20
 
     def __init__(
         self,

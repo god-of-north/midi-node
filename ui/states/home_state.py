@@ -5,7 +5,7 @@ from core.device_event import EventType
 class HomeState(DeviceState):
     def on_enter(self):
         self.context.ui.clear_ui()
-        self.context.ui.write_ui("LIVE MODE\r\n\r\n\r\nPress [Select] to Setup", 0, 0, True)
+        self.context.ui.write_ui("LIVE MODE\r\n\r\n\r\n[Select] to Setup", 0, 0, True)
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:

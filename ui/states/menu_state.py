@@ -43,7 +43,7 @@ class MenuState(DeviceState):
                 continue
 
             prefix = ">" if item_index == self.selected_index else " "
-            text = f"{prefix} {self.items[item_index]}"
+            text = f"{prefix}{self.items[item_index]}"
 
             # Clear line leftovers
             self.context.ui.write_ui(text.ljust(20), cursor_pos[0], cursor_pos[1], True)

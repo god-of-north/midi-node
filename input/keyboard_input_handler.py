@@ -71,7 +71,7 @@ class KeyboardInputHandler(InputHandler):
         print("Mock Input Manager started.")
         print("Controls: Use mapped keys. Press Ctrl+C to stop.")
         try:
-            while not (shutdown_event and shutdown_event()):
+            while not (shutdown_event and shutdown_event.is_set()):
                 # 1. Process "Hardware" Events
                 while self.event_queue:
                     event = self.event_queue.popleft()

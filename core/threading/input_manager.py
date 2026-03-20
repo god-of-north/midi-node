@@ -16,6 +16,6 @@ class InputManager(threading.Thread):
     def run(self):
         logging.info("Input Thread Started")
 
-        self.input_handler.start(self.shutdown.is_set)
+        self.input_handler.start(self.shutdown)
 
         logging.info("Input Thread Shutting Down")

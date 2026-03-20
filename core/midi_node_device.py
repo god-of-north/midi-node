@@ -16,10 +16,6 @@ from display import DisplayFactory, DisplayType
 
 class MidiNodeDevice:
     def __init__(self):
-        # logging.basicConfig(level=logging.INFO, format='%(threadName)s: %(message)s')
-        logging.basicConfig(level=logging.ERROR, format='%(threadName)s: %(message)s')
-        
-
         # Event Queues and Shutdown Event
         self.event_queue = queue.Queue()
         self.ui_queue = queue.Queue()
@@ -52,7 +48,9 @@ class MidiNodeDevice:
                     self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
 
             input_handler.add_encoder("down", "up", encoder_callback)
-            input_handler.add_button("enter", {ButtonEvent.PRESS: lambda: self.event_queue.put(DeviceEvent(EventType.ENCODER_SELECT))})
+            input_handler.add_button("enter", {
+                ButtonEvent.PRESS: lambda: self.event_queue.put(DeviceEvent(EventType.ENCODER_SELECT))
+            })
 
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.CONSOLE)
@@ -60,6 +58,17 @@ class MidiNodeDevice:
         else:
             # Input Handler Setup
             input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.GPIO)
+
+            def encoder_callback(direction):
+                if direction == 1:
+                    self.event_queue.put(DeviceEvent(EventType.ENCODER_CW))
+                else:
+                    self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
+
+            input_handler.add_encoder(clk_pin=17, dt_pin=18, callback=encoder_callback)
+            input_handler.add_button(pin=27, actions={
+                ButtonEvent.PRESS: lambda q=self.event_queue: q.put(DeviceEvent(EventType.ENCODER_SELECT))
+            })
 
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.LCD2004)
@@ -87,6 +96,9 @@ class MidiNodeDevice:
         while not self.shutdown_event.is_set():
             try:
                 event = self.event_queue.get(timeout=0.5)
+
+                logging.info(f"Processing event: {event}")
+
                 self.context.state.current_state.handle_event(event)
                 self.event_queue.task_done()
             except queue.Empty:
