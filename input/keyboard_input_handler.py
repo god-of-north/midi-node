@@ -1,6 +1,8 @@
 import time
 import keyboard
 from collections import deque
+
+from input.input_handler import InputHandler
 from .button_event import ButtonEvent
 
 # Mocked event to mimic gpiod event structure
@@ -9,7 +11,7 @@ class MockEvent:
         self.line_offset = pin
         self.event_type = event_type # 'FALLING' or 'RISING'
 
-class KeyboardInputManager:
+class KeyboardInputHandler(InputHandler):
     def __init__(self, debounce_ms=30):
         self.buttons = {}
         self.encoders = {}

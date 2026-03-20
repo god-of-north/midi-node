@@ -1,8 +1,12 @@
 from .button_event import ButtonEvent
-from .keyboard_input_manager import KeyboardInputManager, MockEvent
+from .pot_event import PotEvent
+from .input_handler import InputHandler
+from .input_handler_factory import InputHandlerFactory, InputHandlerType
 
 __all__ = [
     "ButtonEvent",
-    "KeyboardInputManager",
-    "MockEvent",
+    "PotEvent",
+    "InputHandler",
+    "InputHandlerFactory",
+    "InputHandlerType",
 ]

@@ -2,12 +2,17 @@ import threading
 import queue
 import logging
 
-from storage.app_config import AppConfig
+from controls.control import Control
+from core.device_event import DeviceEvent, EventType
+from input.button_event import ButtonEvent
+from config import APP_MODE
+from storage.app_config import AppMode
 from .device_context import DeviceContext
 from .threading.input_manager import InputManager
 from .threading.ui_manager import UIManager
-from display.mock_lcd import MockLCD
 from ui.states.home_state import HomeState
+from input import InputHandlerFactory, InputHandlerType
+from display import DisplayFactory, DisplayType
 
 class MidiNodeDevice:
     def __init__(self):
@@ -22,12 +27,46 @@ class MidiNodeDevice:
 
         self.context = DeviceContext(self.event_queue, self.ui_queue)
 
-        if self.context.data.config.app_mode == AppConfig.SIMULATION:
-            self.lcd = MockLCD()
+        # Input Handler and LCD Setup
+        input_handler = None
+        if APP_MODE == AppMode.SIMULATION:
+            # Input Handler Setup
+            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.KEYBOARD)
+            default_key_map = {
+                Control.BUTTON_1: '1',
+                Control.BUTTON_2: '2',
+                Control.BUTTON_3: '3',
+                Control.BUTTON_4: '4',
+            }
+
+            for control, button in default_key_map.items():
+                input_handler.add_button(button, {
+                    ButtonEvent.PRESS: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.PRESS].execute()),
+                    ButtonEvent.RELEASE: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.RELEASE].execute()),
+                })
+
+            def encoder_callback(direction):
+                if direction == 1:
+                    self.event_queue.put(DeviceEvent(EventType.ENCODER_CW))
+                else:
+                    self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
+
+            input_handler.add_encoder("down", "up", encoder_callback)
+            input_handler.add_button("enter", {ButtonEvent.PRESS: lambda: self.event_queue.put(DeviceEvent(EventType.ENCODER_SELECT))})
+
+            # LCD Setup
+            self.lcd = DisplayFactory.create_display(DisplayType.CONSOLE)
+            self.lcd.clear()
+        else:
+            # Input Handler Setup
+            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.GPIO)
+
+            # LCD Setup
+            self.lcd = DisplayFactory.create_display(DisplayType.LCD2004)
             self.lcd.clear()
 
-            self.input_thread = InputManager(self.event_queue, self.shutdown_event, self.context.data.preset.controls)
 
+        self.input_thread = InputManager(self.event_queue, self.shutdown_event, input_handler=input_handler)
         self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
     
         self.context.state.push_state(HomeState(self.context))

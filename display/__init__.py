@@ -1,7 +1,8 @@
 from .display_provider import DisplayProvider
-from .mock_lcd import MockLCD
+from .display_factory import DisplayFactory, DisplayType
 
 __all__ = [
     "DisplayProvider",
-    "MockLCD",
+    "DisplayFactory",
+    "DisplayType",
 ]
