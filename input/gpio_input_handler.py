@@ -41,7 +41,7 @@ class GPIOInputHandler(InputHandler):
         self.all_pins = []
 
     def add_button(self, pin, actions, tap_time=0.25, long_press=0.6):
-        logging.info(f"Adding button on pin {pin} with actions: {actions}")
+        logging.info(f"Adding button on pin {pin}")
 
         self.buttons[pin] = {
             "actions": actions,
@@ -61,10 +61,9 @@ class GPIOInputHandler(InputHandler):
         if dt_pin not in self.all_pins: self.all_pins.append(dt_pin)
 
     def _fire(self, pin_data, event_type: ButtonEvent):
-        logging.info(f"Firing event {event_type} for pin with actions: {pin_data['actions']}")
+        logging.info(f"Firing event {event_type}")
 
         action = pin_data["actions"].get(event_type)
-        logging.info(f"Action for event {event_type}: {action}")
         if action: 
             logging.info(f"Executing action for event {event_type}")
             action()

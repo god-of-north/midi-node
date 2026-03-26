@@ -1,10 +1,12 @@
 import serial
+import serial.tools.list_ports
 from midi.midi_output import MidiOutput
 
 
 class UartMidiOutput(MidiOutput):
     def __init__(self, port="/dev/serial0"):
-        # /dev/ttyAMA0 - UART0 (PL011)
+        # /dev/serial0 - UART0 (PL011)
+        # /dev/ttyAMA0 - old UART0 (PL011)
         # /dev/ttyS0 - UART1 (mini-UART) Might need 'core_freq=250' in config.txt for stability (or 'force_turbo=1' to disable dynamic frequency scaling)
         self.ser = serial.Serial(port, 31250)
 
@@ -17,10 +19,25 @@ class UartMidiOutput(MidiOutput):
     def close(self):
         self.ser.close()
 
+    @staticmethod
+    def list_serial_ports():
+        """
+        Lists serial ports
+        """
+        ports_data = serial.tools.list_ports.comports()
+        ports = []
+        if not ports_data:
+            print("No serial ports found.")
+        else:
+            print("Available serial ports:")
+            for port, desc, hwid in sorted(ports_data):
+                ports.append(port)
+        return ports
+
 
 if __name__ == "__main__":
-    # midi_out = UartMidiOutput("/dev/serial0")
-    midi_out = UartMidiOutput("/dev/ttyAMA0")  # Try the other UART if the first one doesn't work
+    midi_out = UartMidiOutput("/dev/serial0")
+    # midi_out = UartMidiOutput("/dev/ttyAMA0")  # Try the other UART if the first one doesn't work
     # midi_out = UartMidiOutput("/dev/ttyS0")  # Try the other UART if the first one doesn't work
 
     # midi_out.send_cc(0, 80, 127)  # Send CC1 with value 127 on channel 0

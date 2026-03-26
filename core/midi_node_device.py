@@ -68,10 +68,29 @@ class MidiNodeDevice:
                 else:
                     self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
 
-            input_handler.add_encoder(clk_pin=17, dt_pin=18, callback=encoder_callback)
+            input_handler.add_encoder(clk_pin=18, dt_pin=17, callback=encoder_callback)
             input_handler.add_button(pin=27, actions={
                 ButtonEvent.PRESS: lambda q=self.event_queue: q.put(DeviceEvent(EventType.ENCODER_SELECT))
             })
+
+            default_key_map = {
+                Control.BUTTON_1: 6,
+                Control.BUTTON_2: 13,
+                Control.BUTTON_3: 19,
+                Control.BUTTON_4: 26,
+            }
+
+            for control, button in default_key_map.items():
+                input_handler.add_button(pin=button, actions={
+                    ButtonEvent.PRESS: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.PRESS].execute()),
+                    ButtonEvent.RELEASE: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.RELEASE].execute()),
+                    ButtonEvent.TAP: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.TAP].execute()),
+                    ButtonEvent.DOUBLE_TAP: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.DOUBLE_TAP].execute()),
+                    ButtonEvent.TRIPLE_TAP: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.TRIPLE_TAP].execute()),
+                    ButtonEvent.LONG_PRESS: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.LONG_PRESS].execute()),
+                    ButtonEvent.LONG_PRESS_RELEASE: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.LONG_PRESS_RELEASE].execute()),
+                })
+
 
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.LCD2004)

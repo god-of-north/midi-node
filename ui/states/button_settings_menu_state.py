@@ -1,4 +1,8 @@
 from enum import Enum
+
+from actions.action import ActionParam
+from actions.midi_action import CustomParamSelectorRegistry
+from ui.states.menu_selector_state import MenuSelectorState
 from .menu_state import MenuState
 from .dummy_state import DummyState
 from .action_param_selector_states import ActionParamBoolSelectorState, ActionParamIntSelectorState, ActionParamStringSelectorState, ActionParamEnumSelectorState
@@ -36,13 +40,20 @@ class ButtonSettingsMenuState(MenuState):
         for key, param in params.items():
             transition = {"class": DummyState}
             display_value = param.value
-            if param.param_type == bool:
+
+            if(param.custom_selector):
+                selector = CustomParamSelectorRegistry.get_selector(param.custom_selector)
+                if selector:
+                    transition = {"class": MenuSelectorState, "args": {"param":param, "items":selector.get_list(params), 
+                                                                       "callback": self._update_param_callback_factory(param)}}
+            elif param.param_type == bool:
                 transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}
             elif param.param_type == int:
                 transition = {"class": ActionParamIntSelectorState, "args": {"param":param}}
             elif param.param_type == str:
                 transition = {"class": ActionParamStringSelectorState, "args": {"param":param}}
             elif issubclass(param.param_type, Enum):
+                display_value = param.value.name if param.value else "None"
                 transition = {"class": ActionParamEnumSelectorState, "args": {"param":param}}
             elif param.param_type == list:
                 display_value = "[]"
@@ -64,3 +75,16 @@ class ButtonSettingsMenuState(MenuState):
                 self.return_to_previous()
         else:
             super().handle_event(event)
+
+    def _update_param_callback_factory(self, param: ActionParam):
+        return lambda selected: self._update_param(param, selected)
+    
+    def _update_param(self, param: ActionParam, selected):
+        if param.param_type == int:
+            param.value = int(selected)
+        elif param.param_type == bool:
+            param.value = selected == "True"
+        elif issubclass(param.param_type, Enum):
+            param.value = param.param_type[selected]
+        else:
+            param.value = selected

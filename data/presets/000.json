@@ -5,21 +5,32 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "composite",
-                    "actions": [
-                        {
-                            "type": "cc",
-                            "cc": 127
-                        },
-                        {
-                            "type": "info",
-                            "info": "Info"
-                        }
-                    ]
+                    "type": "info",
+                    "info": "Button 1 Pressed"
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
                     "info": "Button 1 Released"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "info",
+                    "info": "Button 1 TAP"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "info",
+                    "info": "Button 1 DOUBLE_TAP"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "info",
+                    "info": "Button 1 TRIPLE_TAP"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "info",
+                    "info": "Button 1 LONG_PRESS"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "info",
+                    "info": "Button 1 LP_RELEASE"
                 }
             }
         },
@@ -33,6 +44,26 @@
                 "ButtonEvent.RELEASE": {
                     "type": "info",
                     "info": "Button 2 Released"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "info",
+                    "info": "Button 2 TAP"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "info",
+                    "info": "Button 2 DOUBLE_TAP"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "info",
+                    "info": "Button 2 TRIPLE_TAP"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "info",
+                    "info": "Button 2 LONG_PRESS"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "info",
+                    "info": "Button 2 LP_RELEASE"
                 }
             }
         },
@@ -46,6 +77,26 @@
                 "ButtonEvent.RELEASE": {
                     "type": "info",
                     "info": "Button 3 Released"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "info",
+                    "info": "Button 3 TAP"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "info",
+                    "info": "Button 3 DOUBLE_TAP"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "info",
+                    "info": "Button 3 TRIPLE_TAP"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "info",
+                    "info": "Button 3 LONG_PRESS"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "info",
+                    "info": "Button 3 LP_RELEASE"
                 }
             }
         },
@@ -59,6 +110,26 @@
                 "ButtonEvent.RELEASE": {
                     "type": "info",
                     "info": "Button 4 Released"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "info",
+                    "info": "Button 4 TAP"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "info",
+                    "info": "Button 4 DOUBLE_TAP"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "info",
+                    "info": "Button 4 TRIPLE_TAP"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "info",
+                    "info": "Button 4 LONG_PRESS"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "info",
+                    "info": "Button 4 LP_RELEASE"
                 }
             }
         },

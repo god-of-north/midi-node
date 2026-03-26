@@ -2,6 +2,7 @@ from enum import Enum
 
 from actions.action import ActionParam
 from actions.midi_action import CustomParamSelectorRegistry
+from ui.states.menu_selector_state import MenuSelectorState
 from .menu_state import MenuState
 from .dummy_state import DummyState
 from .action_param_selector_states import ActionParamBoolSelectorState, ActionParamIntSelectorState, ActionParamStringSelectorState, ActionParamEnumSelectorState
@@ -9,24 +10,6 @@ from .boolean_selector_state import BooleanWithCallbackState
 from .action_param_list_editor_state import ActionParamListEditorState
 from core.device_event import EventType
 from actions import Action
-
-class MenuSelectorState(MenuState):
-    def __init__(self, context, param: ActionParam, items: list[str], callback):
-        super().__init__(context)
-        self.param = param
-        self.items = items
-        self.callback = callback
-
-    def on_enter(self):
-        super().on_enter()
-
-    def handle_event(self, event):
-        if event.type == EventType.ENCODER_SELECT:
-            selected = self._get_selected()
-            self.callback(selected)
-            self.return_to_previous()
-        else:
-            super().handle_event(event)
 
 class ActionEditorState(MenuState):
     def __init__(self, context, action: Action, delete_callback=None):
@@ -58,6 +41,7 @@ class ActionEditorState(MenuState):
             elif param.param_type == str:
                 transition = {"class": ActionParamStringSelectorState, "args": {"param":param}}
             elif issubclass(param.param_type, Enum):
+                display_value = param.value.name if param.value else "None"
                 transition = {"class": ActionParamEnumSelectorState, "args": {"param":param}}
             elif param.param_type == list:
                 display_value = "[]"

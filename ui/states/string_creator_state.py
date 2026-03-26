@@ -23,7 +23,7 @@ class StringCreatorState(DeviceState):
         self.scroll_offset = 0
         self.header = header
 
-        self.chars: List[str] = list(value)
+        self.chars: List[str] = list(value or "")
 
     def on_enter(self):
         self.context.ui.clear_ui()
