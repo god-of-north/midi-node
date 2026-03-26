@@ -1,4 +1,7 @@
 from enum import Enum
+
+from actions.action import ActionParam
+from actions.midi_action import CustomParamSelectorRegistry
 from .menu_state import MenuState
 from .dummy_state import DummyState
 from .action_param_selector_states import ActionParamBoolSelectorState, ActionParamIntSelectorState, ActionParamStringSelectorState, ActionParamEnumSelectorState
@@ -6,6 +9,24 @@ from .boolean_selector_state import BooleanWithCallbackState
 from .action_param_list_editor_state import ActionParamListEditorState
 from core.device_event import EventType
 from actions import Action
+
+class MenuSelectorState(MenuState):
+    def __init__(self, context, param: ActionParam, items: list[str], callback):
+        super().__init__(context)
+        self.param = param
+        self.items = items
+        self.callback = callback
+
+    def on_enter(self):
+        super().on_enter()
+
+    def handle_event(self, event):
+        if event.type == EventType.ENCODER_SELECT:
+            selected = self._get_selected()
+            self.callback(selected)
+            self.return_to_previous()
+        else:
+            super().handle_event(event)
 
 class ActionEditorState(MenuState):
     def __init__(self, context, action: Action, delete_callback=None):
@@ -24,7 +45,13 @@ class ActionEditorState(MenuState):
         for key, param in params.items():
             transition = {"class": DummyState}
             display_value = param.value
-            if param.param_type == bool:
+            if(param.custom_selector):
+                # TODO: add custom value selector support
+                selector = CustomParamSelectorRegistry.get_selector(param.custom_selector)
+                if selector:
+                    transition = {"class": MenuSelectorState, "args": {"param":param, "items":selector.get_list(params), 
+                                                                       "callback": self._update_param_callback_factory(param)}}
+            elif param.param_type == bool:
                 transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}
             elif param.param_type == int:
                 transition = {"class": ActionParamIntSelectorState, "args": {"param":param}}
@@ -58,3 +85,16 @@ class ActionEditorState(MenuState):
         if confirmed:
             self.delete_callback()
             self.action = None
+
+    def _update_param_callback_factory(self, param: ActionParam):
+        return lambda selected: self._update_param(param, selected)
+    
+    def _update_param(self, param: ActionParam, selected):
+        if param.param_type == int:
+            param.value = int(selected)
+        elif param.param_type == bool:
+            param.value = selected == "True"
+        elif issubclass(param.param_type, Enum):
+            param.value = param.param_type[selected]
+        else:
+            param.value = selected

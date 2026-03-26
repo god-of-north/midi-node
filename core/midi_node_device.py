@@ -6,6 +6,7 @@ from controls.control import Control
 from core.device_event import DeviceEvent, EventType
 from input.button_event import ButtonEvent
 from config import APP_MODE
+from midi.midi_router import MidiRouter
 from storage.app_config import AppMode
 from .device_context import DeviceContext
 from .threading.input_manager import InputManager
@@ -21,7 +22,9 @@ class MidiNodeDevice:
         self.ui_queue = queue.Queue()
         self.shutdown_event = threading.Event()
 
-        self.context = DeviceContext(self.event_queue, self.ui_queue)
+        self.midi = MidiRouter()
+
+        self.context = DeviceContext(self.event_queue, self.ui_queue, self.midi)
 
         # Input Handler and LCD Setup
         input_handler = None

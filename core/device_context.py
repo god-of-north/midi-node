@@ -3,6 +3,8 @@ import queue
 import logging
 
 from input.pot_event import PotEvent
+from midi.midi_output_type import MidiOutputType
+from midi.midi_router import MidiRouter
 from storage.app_config import AppMode
 from .device_event import DeviceEvent, EventType
 from storage.storage_manager import StorageManager
@@ -109,12 +111,21 @@ class StateContext:
         self.current_state.on_enter()
 
 class DeviceContext:
-    def __init__(self, event_queue: queue.Queue, ui_queue: queue.Queue):
+    def __init__(self, event_queue: queue.Queue, ui_queue: queue.Queue, midi_router: MidiRouter):
         self.data = DataContext(self)
         self.ui = UIContext(ui_queue)
         self.state = StateContext(self)
         self.event_queue = event_queue
+        self.midi_router = midi_router
 
     def show_info(self, info: str):
         """Display an informational message"""
         self.event_queue.put(DeviceEvent(EventType.INFO_MESSAGE, data={"info": info}))
+
+    def send_cc(self, output: MidiOutputType, name: str, channel:int, cc:int, value:int):
+        """Send a MIDI CC message to the specified output and channel."""
+        self.midi_router.send_cc(output, name, channel, cc, value)
+
+    def send_pc(self, output: MidiOutputType, name: str, channel:int, program:int):
+        """Send a MIDI Program Change message to the specified output and channel."""
+        self.midi_router.send_pc(output, name, channel, program)

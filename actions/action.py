@@ -1,13 +1,18 @@
 from __future__ import annotations
+from enum import Enum, auto
 from typing import Dict, List, Optional, Type, Any, Union
 
+class CustomSelectorType(Enum):
+    MIDI_OUTPUT = auto()
+
 class ActionParam:
-    def __init__(self, name: str, param_type: type, value, default=None, options:dict={}):
+    def __init__(self, name: str, param_type: type, value, default=None, options:dict={}, custom_selector: Optional[CustomSelectorType] = None):
         self.name = name
         self.param_type = param_type
         self.value = value
         self.default = default
         self.options = options or {}
+        self.custom_selector = custom_selector
 
     def to_dict(self) -> dict:
         return {

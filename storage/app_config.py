@@ -1,5 +1,7 @@
 from enum import Enum, auto
 
+from midi.midi_output_type import MidiOutputType
+
 
 class AppMode(Enum):
     SIMULATION = auto()
