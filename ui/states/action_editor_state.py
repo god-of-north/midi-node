@@ -4,7 +4,7 @@ from actions.action import ActionParam
 from actions.param_selector import CustomParamSelectorRegistry
 from ui.states.menu_selector_state import MenuSelectorState
 from .menu_state import MenuState
-from .dummy_state import DummyState
+from .error_state import ErrorState
 from .action_param_selector_states import ActionParamBoolSelectorState, ActionParamIntSelectorState, ActionParamStringSelectorState, ActionParamEnumSelectorState
 from .boolean_selector_state import BooleanWithCallbackState
 from .action_param_list_editor_state import ActionParamListEditorState
@@ -26,7 +26,7 @@ class ActionEditorState(MenuState):
 
         self.transitions = {}
         for key, param in params.items():
-            transition = {"class": DummyState}
+            transition = {"class": ErrorState}
             display_value = param.value
             if(param.custom_selector):
                 # TODO: add custom value selector support

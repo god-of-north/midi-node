@@ -28,7 +28,8 @@ class DataContext:
         self.current_bank_index = self.storage.load_current_bank_index()
         self.preset_list = self.storage.get_preset_list()
         self.current_preset_index = self.storage.load_current_preset_index()
-        
+        self.max_preset_index = len(self.preset_list) - 1
+
         if self.current_bank_index is not None:
             self.bank = self.storage.load_bank(self.current_bank_index) 
         else:
@@ -70,6 +71,15 @@ class DataContext:
 
     def save_current_preset(self):
         self.storage.save_preset(self.current_preset_index, self.preset)
+
+    def set_preset(self, preset_number:int):
+        if self.current_preset_index == preset_number:
+            logging.info(f"Preset {preset_number} is already active.")
+            return
+
+        self.preset = self.storage.load_preset(preset_number)
+        self.storage.save_current_preset_index(preset_number)
+        self.current_preset_index = preset_number
     
     def _default_app_config(self) -> 'AppConfig':
         from storage.app_config import AppConfig
@@ -134,3 +144,7 @@ class DeviceContext:
     def list_midi_outputs(self, output_type: MidiOutputType) -> list[str]:
         """List available MIDI outputs of the specified type."""
         return self.midi_router.list_outputs(output_type)
+    
+    def set_preset(self, preset_number:int):
+        """Set the current preset by its number."""
+        self.data.set_preset(preset_number)

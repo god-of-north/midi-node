@@ -5,18 +5,25 @@ from .info_action import InfoAction
 from .pc_action import PCAction
 from .param_selector import CustomSelectorType, ParamSelector, CustomParamSelectorRegistry
 from .midi_output_selector import MIDIOutputSelector
+from .select_preset_action import SelectPresetAction
+from .previous_preset_action import PreviousPresetAction
+from .next_preset_action import NextPresetAction
 
 __all__ = [
     "Action",
     "ActionParam",
     "ActionRegistry",
     "ActionRegistryEntry",
-    "CCAction",
-    "CompositeAction",
-    "InfoAction",
-    "PCAction",
     "CustomParamSelectorRegistry",
     "CustomSelectorType",
     "ParamSelector",
     "MIDIOutputSelector",
+    
+    "CCAction",
+    "CompositeAction",
+    "InfoAction",
+    "PCAction",
+    "SelectPresetAction",
+    "PreviousPresetAction",
+    "NextPresetAction"
 ]

@@ -11,7 +11,7 @@ from .boolean_selector_state import BooleanSelectorState, BooleanWithCallbackSta
 from .button_settings_menu_state import ButtonSettingsMenuState
 from .control_settings_menu_state import ControlSettingsMenuState
 from .device_state import DeviceState
-from .dummy_state import DummyState
+from .error_state import ErrorState
 from .enum_selector_state import EnumSelectorState
 from .home_state import HomeState
 from .int_selector_state import IntNumberSelectorState
@@ -36,7 +36,7 @@ __all__ = [
     "ButtonSettingsMenuState",
     "ControlSettingsMenuState",
     "DeviceState",
-    "DummyState",
+    "ErrorState",
     "EnumSelectorState",
     "HomeState",
     "IntNumberSelectorState",

@@ -1,7 +1,7 @@
 from .menu_state import MenuState
 from .control_settings_menu_state import ControlSettingsMenuState
 from .save_preset_state import SavePresetState
-from .dummy_state import DummyState
+from .error_state import ErrorState
 from core.device_event import EventType
 from controls import Control
 
@@ -10,6 +10,7 @@ class SettingsMenuState(MenuState):
         super().__init__(context)
 
         self.transitions = {
+            # "System Config": {"class": ErrorState},
             "Setup Button 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_1}},
             "Setup Button 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_2}},
             "Setup Button 3": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_3}},
@@ -17,8 +18,7 @@ class SettingsMenuState(MenuState):
             "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
             "Save Preset": {"class": SavePresetState},
-            "Clone Preset": {"class": DummyState},
-            "Delete Preset": {"class": DummyState},
+            "Clone Preset": {"class": ErrorState},
             "Back to Live Mode": None
         }
         self.items = list(self.transitions.keys())
