@@ -18,6 +18,14 @@ class MidiRouter:
             device = self._create_output(output, name)
         device.send_pc(channel, program)
 
+    def list_outputs(self, output_type: MidiOutputType) -> list[str]:
+        if output_type == MidiOutputType.UART:
+            from midi.uart_midi_output import UartMidiOutput
+            return UartMidiOutput.list_serial_ports()
+        elif output_type == MidiOutputType.USB:
+            from midi.usb_midi_output import UsbMidiOutput
+            return UsbMidiOutput.list_usb_midi_devices()
+
     def close(self):
         for o in self.outputs.values():
             o.close()

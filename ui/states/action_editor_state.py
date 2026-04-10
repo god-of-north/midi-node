@@ -1,7 +1,7 @@
 from enum import Enum
 
 from actions.action import ActionParam
-from actions.midi_action import CustomParamSelectorRegistry
+from actions.param_selector import CustomParamSelectorRegistry
 from ui.states.menu_selector_state import MenuSelectorState
 from .menu_state import MenuState
 from .dummy_state import DummyState

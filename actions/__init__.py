@@ -3,6 +3,8 @@ from .cc_action import CCAction
 from .composite_action import CompositeAction
 from .info_action import InfoAction
 from .pc_action import PCAction
+from .param_selector import CustomSelectorType, ParamSelector, CustomParamSelectorRegistry
+from .midi_output_selector import MIDIOutputSelector
 
 __all__ = [
     "Action",
@@ -13,4 +15,8 @@ __all__ = [
     "CompositeAction",
     "InfoAction",
     "PCAction",
+    "CustomParamSelectorRegistry",
+    "CustomSelectorType",
+    "ParamSelector",
+    "MIDIOutputSelector",
 ]

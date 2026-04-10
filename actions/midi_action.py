@@ -1,53 +1,6 @@
-from abc import ABC, abstractmethod
-from typing import Dict, Optional
-from actions.action import Action, ActionParam, CustomSelectorType
+from actions.action import Action, ActionParam
+from actions.param_selector import CustomSelectorType
 from midi.midi_output_type import MidiOutputType
-
-class CustomParamSelectorRegistry:
-    _registry: Dict[CustomSelectorType, 'ParamSelector'] = {}
-
-    @classmethod
-    def register(cls, name: CustomSelectorType, selector: 'ParamSelector'):
-        cls._registry[name] = selector
-
-    @classmethod
-    def get_selector(cls, name: CustomSelectorType) -> Optional['ParamSelector']:
-        return cls._registry.get(name)
-
-class ParamSelector(ABC):
-    TYPE:CustomSelectorType = None
-
-    @abstractmethod
-    def get_list(self, params: list[ActionParam]) -> list[str]:
-        pass
-
-    def __init_subclass__(cls, **kwargs):
-        """
-        Automatically called when any subclass is defined.
-        Registers the subclass in the CustomParamSelectorRegistry.
-        """
-        super().__init_subclass__(**kwargs)
-        if cls.TYPE != None:
-            CustomParamSelectorRegistry.register(cls.TYPE, cls())
-
-
-class MIDIOutputSelector(ParamSelector):
-    TYPE:CustomSelectorType = CustomSelectorType.MIDI_OUTPUT
-
-    def get_list(self, params: list[ActionParam]) -> list[str]:
-        output = params.get("output")
-        output_type = output.value if output else MidiOutputType.UART
-        if output_type == MidiOutputType.UART:
-            # TODO: query actual UART MIDI devices
-            return ["/dev/serial0", "/dev/ttyAMA0", "/dev/ttyS0"]
-        elif output_type == MidiOutputType.USB:
-            # TODO: query actual USB MIDI devices
-            return ["USB MIDI Device 1", "USB MIDI Device 2"]
-        return []
-
-    
-
-
 
 class MIDIAction(Action):
     TYPE = "midi"

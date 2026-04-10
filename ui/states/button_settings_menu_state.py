@@ -1,7 +1,7 @@
 from enum import Enum
 
 from actions.action import ActionParam
-from actions.midi_action import CustomParamSelectorRegistry
+from actions.param_selector import CustomParamSelectorRegistry
 from ui.states.menu_selector_state import MenuSelectorState
 from .menu_state import MenuState
 from .dummy_state import DummyState
@@ -44,7 +44,7 @@ class ButtonSettingsMenuState(MenuState):
             if(param.custom_selector):
                 selector = CustomParamSelectorRegistry.get_selector(param.custom_selector)
                 if selector:
-                    transition = {"class": MenuSelectorState, "args": {"param":param, "items":selector.get_list(params), 
+                    transition = {"class": MenuSelectorState, "args": {"param":param, "items":selector.get_list(params, self.context), 
                                                                        "callback": self._update_param_callback_factory(param)}}
             elif param.param_type == bool:
                 transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}

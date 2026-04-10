@@ -129,3 +129,7 @@ class DeviceContext:
     def send_pc(self, output: MidiOutputType, name: str, channel:int, program:int):
         """Send a MIDI Program Change message to the specified output and channel."""
         self.midi_router.send_pc(output, name, channel, program)
+
+    def list_midi_outputs(self, output_type: MidiOutputType) -> list[str]:
+        """List available MIDI outputs of the specified type."""
+        return self.midi_router.list_outputs(output_type)

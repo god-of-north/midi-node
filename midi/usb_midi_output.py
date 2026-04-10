@@ -17,6 +17,9 @@ class UsbMidiOutput(MidiOutput):
                                     channel=channel,
                                     program=program))
 
+    def list_usb_midi_devices():
+        return mido.get_output_names()
+
     def close(self):
         self.port.close()
 
