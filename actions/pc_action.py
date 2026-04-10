@@ -11,4 +11,4 @@ class PCAction(MIDIAction):
 
     def execute(self):
         self.context.show_info(f"MIDI PC {self.params['pc'].value}")
-        # self.context.send_pc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["pc"].value)
+        self.context.send_pc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["pc"].value)

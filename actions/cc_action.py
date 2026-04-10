@@ -13,6 +13,6 @@ class CCAction(MIDIAction):
 
     def execute(self):
         self.context.show_info(f"MIDI CC {self.params['cc'].value}:{self.params['value'].value}")
-        # self.context.send_cc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["cc"].value, self.params["value"].value)
+        self.context.send_cc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["cc"].value, self.params["value"].value)
 
         

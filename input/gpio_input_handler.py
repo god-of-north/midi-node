@@ -114,6 +114,8 @@ class GPIOInputHandler(InputHandler):
                 if not data["long_press_fired"]:
                     data["tap_count"] += 1
                     data["tap_timer_start"] = now
+                else:
+                    self._fire(data, ButtonEvent.LONG_PRESS_RELEASE)
                 data["press_timestamp"] = None
 
     def _check_all_timeouts(self):

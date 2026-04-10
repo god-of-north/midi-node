@@ -42,6 +42,11 @@ class MidiNodeDevice:
                 input_handler.add_button(button, {
                     ButtonEvent.PRESS: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.PRESS].execute()),
                     ButtonEvent.RELEASE: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.RELEASE].execute()),
+                    ButtonEvent.LONG_PRESS: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.LONG_PRESS].execute()),
+                    ButtonEvent.LONG_PRESS_RELEASE: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.LONG_PRESS_RELEASE].execute()),
+                    ButtonEvent.TAP: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.TAP].execute()),
+                    ButtonEvent.DOUBLE_TAP: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.DOUBLE_TAP].execute()),
+                    ButtonEvent.TRIPLE_TAP: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.TRIPLE_TAP].execute()),
                 })
 
             def encoder_callback(direction):
