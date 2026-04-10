@@ -1,6 +1,7 @@
 from .device_context import DeviceContext, DataContext, UIContext, StateContext
 from .device_event import DeviceEvent, EventType
 from .midi_node_device import MidiNodeDevice
+from .align_text import AlignText
 
 __all__ = [
     "DeviceContext",
@@ -10,4 +11,5 @@ __all__ = [
     "DeviceEvent",
     "EventType",
     "MidiNodeDevice",
+    "AlignText",
 ]

@@ -1,3 +1,4 @@
+from core.align_text import AlignText
 from .device_state import DeviceState
 from .settings_menu_state import SettingsMenuState
 from core.device_event import EventType
@@ -12,5 +13,11 @@ class HomeState(DeviceState):
             self.transition_to(SettingsMenuState)
         elif event.type == EventType.INFO_MESSAGE:
             info = event.data.get("info", "")
-            self.context.ui.write_ui(f"[{info}]".center(20), 0, 1, True)
+            line = event.data.get("line", 2)-1
+            clear_screen = event.data.get("clear_screen", False)
+            align:AlignText = event.data.get("align", AlignText.CENTER)
+            if clear_screen:
+                self.context.ui.clear_ui()
+            text = f"{info}".center(20) if align == AlignText.CENTER else info.ljust(20) if align == AlignText.LEFT else info.rjust(20)
+            self.context.ui.write_ui(text, 0, line, True)
 

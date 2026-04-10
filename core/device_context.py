@@ -2,6 +2,7 @@ from __future__ import annotations
 import queue
 import logging
 
+from core.align_text import AlignText
 from input.pot_event import PotEvent
 from midi.midi_output_type import MidiOutputType
 from midi.midi_router import MidiRouter
@@ -118,9 +119,9 @@ class DeviceContext:
         self.event_queue = event_queue
         self.midi_router = midi_router
 
-    def show_info(self, info: str):
+    def show_info(self, info: str, line: int = 1, clear_screen: bool = False, align:AlignText = AlignText.CENTER):
         """Display an informational message"""
-        self.event_queue.put(DeviceEvent(EventType.INFO_MESSAGE, data={"info": info}))
+        self.event_queue.put(DeviceEvent(EventType.INFO_MESSAGE, data={"info": info, "line": line, "clear_screen": clear_screen, "align": align}))
 
     def send_cc(self, output: MidiOutputType, name: str, channel:int, cc:int, value:int):
         """Send a MIDI CC message to the specified output and channel."""

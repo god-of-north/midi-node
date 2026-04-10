@@ -6,31 +6,31 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 1 Pressed"
+                    "info": "Button 1 Pressed", "line": 2
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 1 Released"
+                    "info": "Button 1 Released", "line": 2
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 1 TAP"
+                    "info": "Button 1 TAP", "line": 2
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 1 DOUBLE_TAP"
+                    "info": "Button 1 DOUBLE_TAP", "line": 2
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 1 TRIPLE_TAP"
+                    "info": "Button 1 TRIPLE_TAP", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 1 LONG_PRESS"
+                    "info": "Button 1 LONG_PRESS", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 1 LP_RELEASE"
+                    "info": "Button 1 LP_RELEASE", "line": 2
                 }
             }
         },
@@ -39,31 +39,31 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 2 Pressed"
+                    "info": "Button 2 Pressed", "line": 2
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 2 Released"
+                    "info": "Button 2 Released", "line": 2
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 2 TAP"
+                    "info": "Button 2 TAP", "line": 2
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 2 DOUBLE_TAP"
+                    "info": "Button 2 DOUBLE_TAP", "line": 2
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 2 TRIPLE_TAP"
+                    "info": "Button 2 TRIPLE_TAP", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 2 LONG_PRESS"
+                    "info": "Button 2 LONG_PRESS", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 2 LP_RELEASE"
+                    "info": "Button 2 LP_RELEASE", "line": 2
                 }
             }
         },
@@ -72,31 +72,31 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 3 Pressed"
+                    "info": "Button 3 Pressed", "line": 2
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 3 Released"
+                    "info": "Button 3 Released", "line": 2
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 3 TAP"
+                    "info": "Button 3 TAP", "line": 2
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 3 DOUBLE_TAP"
+                    "info": "Button 3 DOUBLE_TAP", "line": 2
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 3 TRIPLE_TAP"
+                    "info": "Button 3 TRIPLE_TAP", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 3 LONG_PRESS"
+                    "info": "Button 3 LONG_PRESS", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 3 LP_RELEASE"
+                    "info": "Button 3 LP_RELEASE", "line": 2
                 }
             }
         },
@@ -105,31 +105,31 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 4 Pressed"
+                    "info": "Button 4 Pressed", "line": 2
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 4 Released"
+                    "info": "Button 4 Released", "line": 2
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 4 TAP"
+                    "info": "Button 4 TAP", "line": 2
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 4 DOUBLE_TAP"
+                    "info": "Button 4 DOUBLE_TAP", "line": 2
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 4 TRIPLE_TAP"
+                    "info": "Button 4 TRIPLE_TAP", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 4 LONG_PRESS"
+                    "info": "Button 4 LONG_PRESS", "line": 2
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 4 LP_RELEASE"
+                    "info": "Button 4 LP_RELEASE", "line": 2
                 }
             }
         },
@@ -138,11 +138,11 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp Pedal 1 Active"
+                    "info": "Exp Pedal 1 Active", "line": 2
                 },
                 "PotEvent.ON_MIN": {
                     "type": "info",
-                    "info": "Exp Pedal 1 Inactive"
+                    "info": "Exp Pedal 1 Inactive", "line": 2
                 }
             }
         },
@@ -151,11 +151,11 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp Pedal 2 Active"
+                    "info": "Exp Pedal 2 Active", "line": 2
                 },
                 "PotEvent.ON_MIN": {
                     "type": "info",
-                    "info": "Exp Pedal 2 Inactive"
+                    "info": "Exp Pedal 2 Inactive", "line": 2
                 }
             }
         }
