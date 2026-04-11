@@ -8,6 +8,7 @@ from .midi_output_selector import MIDIOutputSelector
 from .select_preset_action import SelectPresetAction
 from .previous_preset_action import PreviousPresetAction
 from .next_preset_action import NextPresetAction
+from .toggle_action import ToggleAction
 
 __all__ = [
     "Action",
@@ -25,5 +26,6 @@ __all__ = [
     "PCAction",
     "SelectPresetAction",
     "PreviousPresetAction",
-    "NextPresetAction"
+    "NextPresetAction",
+    "ToggleAction",
 ]

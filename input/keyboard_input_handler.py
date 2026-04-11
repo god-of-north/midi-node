@@ -103,7 +103,7 @@ class KeyboardInputHandler(InputHandler):
                 if duration < data["long_press_time"]:
                     data["tap_count"] += 1
                     data["tap_timer_start"] = now
-                if data["long_press_time"]:
+                if data["long_press_fired"]:
                     self._fire(data, ButtonEvent.LONG_PRESS_RELEASE)
 
                 data["press_timestamp"] = None

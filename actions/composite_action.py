@@ -34,3 +34,4 @@ class CompositeAction(Action):
         if action_info:
             return action_info.action_cls(context=self.context, **data)
         return None
+
