@@ -1,3 +1,4 @@
+from ui.states.menu_selector_state import MenuSelectorState
 from .menu_state import MenuState
 from .control_settings_menu_state import ControlSettingsMenuState
 from .save_preset_state import SavePresetState
@@ -10,15 +11,19 @@ class SettingsMenuState(MenuState):
         super().__init__(context)
 
         self.transitions = {
-            # "System Config": {"class": ErrorState},
+            "Select Preset": {"class": MenuSelectorState, "args": {
+                "items": [f'{preset["number"]:03d}:{preset["name"]}' for preset in self.context.data.preset_list],
+                "param": f'{self.context.data.current_preset_index:03d}:{self.context.data.preset.name}',
+                "callback": self._select_preset_callback}},
+            # "Select Bank": {"class": ErrorState},
+            "Save Preset": {"class": SavePresetState},
             "Setup Button 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_1}},
             "Setup Button 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_2}},
             "Setup Button 3": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_3}},
             "Setup Button 4": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_4}},
             "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
-            "Save Preset": {"class": SavePresetState},
-            "Clone Preset": {"class": ErrorState},
+            # "System Config": {"class": ErrorState},
             "Back to Live Mode": None
         }
         self.items = list(self.transitions.keys())
@@ -33,3 +38,8 @@ class SettingsMenuState(MenuState):
                 self.return_to_previous()
         else:
             super().handle_event(event)
+
+    def _select_preset_callback(self, selected):
+        preset_number = int(selected.split(":")[0])
+        self.context.set_preset(preset_number)
+        self.return_to_previous()

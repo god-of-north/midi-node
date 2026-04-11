@@ -4,14 +4,14 @@ from ui.states.menu_state import MenuState
 
 
 class MenuSelectorState(MenuState):
-    def __init__(self, context, param: ActionParam, items: list[str], callback):
+    def __init__(self, context, param, items: list[str], callback):
         super().__init__(context)
         self.param = param
         self.items = items
         self.callback = callback
 
         try:
-            self.selected_index = self.items.index(str(param.value))
+            self.selected_index = self.items.index(str(param))
         except ValueError:
             self.selected_index = 0
 
