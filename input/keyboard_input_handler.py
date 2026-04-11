@@ -12,18 +12,17 @@ class MockEvent:
         self.event_type = event_type # 'FALLING' or 'RISING'
 
 class KeyboardInputHandler(InputHandler):
-    def __init__(self, debounce_ms=30):
+    def __init__(self, config):
         self.buttons = {}
         self.encoders = {}
         self.event_queue = deque()
         self.key_states = {} # Track if a key is already "down" to prevent auto-repeat
+        self.config = config
 
-    def add_button(self, key_name, actions, tap_time=0.25, long_press=0.6):
+    def add_button(self, key_name, actions):
         """key_name: the keyboard key (e.g., 'space', 'enter', 'z')"""
         self.buttons[key_name] = {
             "actions": actions,
-            "tap_time": tap_time,
-            "long_press_time": long_press,
             "press_timestamp": None,
             "tap_count": 0,
             "tap_timer_start": None,
@@ -100,7 +99,7 @@ class KeyboardInputHandler(InputHandler):
             if data["press_timestamp"]:
                 duration = now - data["press_timestamp"]
                 self._fire(data, ButtonEvent.RELEASE)
-                if duration < data["long_press_time"]:
+                if duration < self.config.buttons_long_press_time:
                     data["tap_count"] += 1
                     data["tap_timer_start"] = now
                 if data["long_press_fired"]:
@@ -112,13 +111,13 @@ class KeyboardInputHandler(InputHandler):
         now = time.time()
         for key, data in self.buttons.items():
             if data["press_timestamp"] and not data["long_press_fired"]:
-                if (now - data["press_timestamp"]) >= data["long_press_time"]:
+                if (now - data["press_timestamp"]) >= self.config.buttons_long_press_time:
                     data["long_press_fired"] = True
                     data["tap_count"] = 0
                     self._fire(data, ButtonEvent.LONG_PRESS)
 
             if data["tap_count"] > 0 and data["tap_timer_start"]:
-                if (now - data["tap_timer_start"]) > data["tap_time"]:
+                if (now - data["tap_timer_start"]) > self.config.buttons_tap_time:
                     gestures = {1: ButtonEvent.TAP, 2: ButtonEvent.DOUBLE_TAP, 3: ButtonEvent.TRIPLE_TAP}
                     event = gestures.get(data["tap_count"], ButtonEvent.TRIPLE_TAP)
                     self._fire(data, event)

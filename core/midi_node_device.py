@@ -30,7 +30,7 @@ class MidiNodeDevice:
         input_handler = None
         if APP_MODE == AppMode.SIMULATION:
             # Input Handler Setup
-            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.KEYBOARD)
+            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.KEYBOARD, self.context.data.config)
             default_key_map = {
                 Control.BUTTON_1: '1',
                 Control.BUTTON_2: '2',
@@ -65,7 +65,7 @@ class MidiNodeDevice:
             self.lcd.clear()
         else:
             # Input Handler Setup
-            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.GPIO)
+            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.GPIO, self.context.data.config)
 
             def encoder_callback(direction):
                 if direction == 1:

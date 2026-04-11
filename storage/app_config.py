@@ -9,16 +9,18 @@ class AppMode(Enum):
 
 class AppConfig:
     def __init__(self):
-        self.app_mode: AppMode = AppMode.LIVE
+        self.buttons_tap_time = 0.25
+        self.buttons_long_press_time = 0.6
 
     def to_dict(self):
         return {
-            "app_mode": str(self.app_mode),
+            "buttons_tap_time": self.buttons_tap_time,
+            "buttons_long_press_time": self.buttons_long_press_time
         }
 
     @classmethod
     def from_dict(cls, data: dict):
         instance = cls()
-        mode_name = data.get("app_mode", "LIVE").split(".")[-1]
-        instance.app_mode = AppMode[mode_name]
+        instance.buttons_tap_time = data.get("buttons_tap_time", 0.25)
+        instance.buttons_long_press_time = data.get("buttons_long_press_time", 0.6)
         return instance

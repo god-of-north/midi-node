@@ -88,3 +88,4 @@ class ButtonSettingsMenuState(MenuState):
             param.value = param.param_type[selected]
         else:
             param.value = selected
+

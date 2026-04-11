@@ -1,4 +1,5 @@
 from ui.states.menu_selector_state import MenuSelectorState
+from ui.states.system_config_state import SystemConfigState
 from .menu_state import MenuState
 from .control_settings_menu_state import ControlSettingsMenuState
 from .save_preset_state import SavePresetState
@@ -23,7 +24,7 @@ class SettingsMenuState(MenuState):
             "Setup Button 4": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_4}},
             "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
-            # "System Config": {"class": ErrorState},
+            "System Config": {"class": SystemConfigState},
             "Back to Live Mode": None
         }
         self.items = list(self.transitions.keys())

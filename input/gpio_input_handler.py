@@ -34,19 +34,18 @@ class RotaryEncoder:
         self.on_rotate(direction)
 
 class GPIOInputHandler(InputHandler):
-    def __init__(self):
+    def __init__(self, config):
         self.chip_path = "/dev/gpiochip0"
         self.buttons = {}
         self.encoders = {}
         self.all_pins = []
+        self.config = config
 
-    def add_button(self, pin, actions, tap_time=0.25, long_press=0.6):
+    def add_button(self, pin, actions):
         logging.info(f"Adding button on pin {pin}")
 
         self.buttons[pin] = {
             "actions": actions,
-            "tap_time": tap_time,
-            "long_press_time": long_press,
             "press_timestamp": None,
             "tap_count": 0,
             "tap_timer_start": None,
@@ -123,14 +122,14 @@ class GPIOInputHandler(InputHandler):
         for pin, data in self.buttons.items():
             # Handle Long Press while button is still held
             if data["press_timestamp"] and not data["long_press_fired"]:
-                if (now - data["press_timestamp"]) >= data["long_press_time"]:
+                if (now - data["press_timestamp"]) >= self.config.buttons_long_press_time:
                     data["long_press_fired"] = True
                     data["tap_count"] = 0
                     self._fire(data, ButtonEvent.LONG_PRESS)
 
             # Handle Tap timeout
             if data["tap_count"] > 0 and data["tap_timer_start"]:
-                if (now - data["tap_timer_start"]) > data["tap_time"]:
+                if (now - data["tap_timer_start"]) > self.config.buttons_tap_time:
                     gestures = {1: ButtonEvent.TAP, 2: ButtonEvent.DOUBLE_TAP, 3: ButtonEvent.TRIPLE_TAP}
                     event = gestures.get(data["tap_count"], ButtonEvent.TRIPLE_TAP)
                     self._fire(data, event)
