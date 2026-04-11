@@ -80,6 +80,9 @@ class DataContext:
         self.preset = self.storage.load_preset(preset_number)
         self.storage.save_current_preset_index(preset_number)
         self.current_preset_index = preset_number
+
+    def save_app_config(self):
+        self.storage.save_app_config(self.config)
     
     def _default_app_config(self) -> 'AppConfig':
         from storage.app_config import AppConfig

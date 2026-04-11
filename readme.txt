@@ -3,7 +3,6 @@
 - CC grow/fall actions (value grow/fall/bounce consistantley when button pressed)
 - LFO action
 - Envelope action
-- Adjust input paramenters (debounce, long_press time, tap time,..)
 - Actions on PresetEnter, PresetExit
 - Actions on BankEnter, BankExit
 - Banks
@@ -24,7 +23,7 @@ python3 -m venv test-env
 source test-env/bin/activate
 
 # install deps
-pip3 install RPLCD smbus2 gpiozero gpiod rpi-lgpio pyserial mido
+pip3 install RPLCD smbus2 gpiozero gpiod rpi-lgpio pyserial mido adafruit-circuitpython-ads1x15
 
 
 sudo apt install python3-smbus i2c-tools -y

@@ -1,6 +1,7 @@
 from .device_state import DeviceState
 from core.device_event import EventType
 
+
 class IntNumberSelectorState(DeviceState):
     LINE_WIDTH = 20
 
@@ -90,3 +91,19 @@ class IntNumberSelectorState(DeviceState):
         """
         sign = "-" if value < 0 else ""
         return f"{sign}{abs(value):0{self._num_width}d}"
+
+class IntSelectorState(IntNumberSelectorState):
+    def __init__(self, context, value: int = 0, callback=None, header="Set Value:", min_value=0, max_value=100):
+        super().__init__(
+            context,
+            min_value=min_value,
+            max_value=max_value,
+            value=value,
+            header=header
+        )
+        self.callback = callback
+
+
+    def return_to_previous(self, deep: int = 1):
+        self.callback(self.get_value())
+        super().return_to_previous()
