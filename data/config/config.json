@@ -1,4 +1,8 @@
 {
     "buttons_tap_time": 0.2,
-    "buttons_long_press_time": 0.6
+    "buttons_long_press_time": 0.6,
+    "ads1115_address": 72,
+    "ads1115_gain": 1,
+    "ads1115_pot_threshold": 200,
+    "input_poll_interval": 0.01
 }

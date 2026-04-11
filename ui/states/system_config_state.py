@@ -1,5 +1,7 @@
 from core.device_event import EventType
+from ui.states.boolean_selector_state import BooleanWithCallbackState
 from ui.states.int_selector_state import IntSelectorState
+from ui.states.menu_selector_state import MenuSelectorState
 from ui.states.menu_state import MenuState
 
 
@@ -25,6 +27,39 @@ class SystemConfigState(MenuState):
             "max_value": 5000
         }}
 
+        self.transitions["Input Poll Interval"] = {"class": IntSelectorState, "args": {
+            "value": int(self.context.data.config.input_poll_interval*1000),
+            "callback": self._update_input_poll_interval,
+            "header": "Input Poll Interval",
+            "min_value": 1,
+            "max_value": 1000
+        }}
+
+        self.transitions["ADS1115 Address"] = {"class": IntSelectorState, "args": {
+            "value": int(self.context.data.config.ads1115_address),
+            "callback": self._update_ads1115_address,
+            "header": "ADS1115 Address",
+            "min_value": 0,
+            "max_value": 127,
+            "base": 16
+        }}
+
+        self.transitions["ADS1115 Gain"] = {"class": MenuSelectorState, "args": {
+            "param": str(self.context.data.config.ads1115_gain),
+            "callback": self._update_ads1115_gain,
+            "header": "ADS1115 Gain",
+            "items": [1, 2, 4, 8, 16, 32]
+        }}
+
+        self.transitions["ADS1115 PotThreshold"] = {"class": IntSelectorState, "args": {
+            "value": int(self.context.data.config.ads1115_pot_threshold),
+            "callback": self._update_ads1115_pot_threshold,
+            "header": "ADS1115 PotThreshold",
+            "min_value": 1,
+            "max_value": 1000
+        }}
+
+
         self.transitions["Back"] = None
         self.items = list(self.transitions.keys())
 
@@ -47,4 +82,20 @@ class SystemConfigState(MenuState):
 
     def _update_buttons_long_press_time(self, value: int):
         self.context.data.config.buttons_long_press_time = value / 1000.0
+        self.context.data.save_app_config()
+
+    def _update_input_poll_interval(self, value: int):
+        self.context.data.config.input_poll_interval = value / 1000.0
+        self.context.data.save_app_config()
+
+    def _update_ads1115_address(self, value: int):
+        self.context.data.config.ads1115_address = value
+        self.context.data.save_app_config()
+    
+    def _update_ads1115_gain(self, value):
+        self.context.data.config.ads1115_gain = int(value)
+        self.context.data.save_app_config()
+
+    def _update_ads1115_pot_threshold(self, value: int):
+        self.context.data.config.ads1115_pot_threshold = value
         self.context.data.save_app_config()

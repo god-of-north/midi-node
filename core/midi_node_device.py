@@ -26,11 +26,12 @@ class MidiNodeDevice:
 
         self.context = DeviceContext(self.event_queue, self.ui_queue, self.midi)
 
-        # Input Handler and LCD Setup
-        input_handler = None
+        input_handlers = []
+
         if APP_MODE == AppMode.SIMULATION:
             # Input Handler Setup
-            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.KEYBOARD, self.context.data.config)
+            keyboard_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.KEYBOARD, self.context.data.config)
+            
             default_key_map = {
                 Control.BUTTON_1: '1',
                 Control.BUTTON_2: '2',
@@ -39,7 +40,7 @@ class MidiNodeDevice:
             }
 
             for control, button in default_key_map.items():
-                input_handler.add_button(button, {
+                keyboard_input_handler.add_button(button, {
                     ButtonEvent.PRESS: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.PRESS].execute()),
                     ButtonEvent.RELEASE: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.RELEASE].execute()),
                     ButtonEvent.LONG_PRESS: (lambda c=control: self.context.data.preset.controls[c].actions[ButtonEvent.LONG_PRESS].execute()),
@@ -55,17 +56,18 @@ class MidiNodeDevice:
                 else:
                     self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
 
-            input_handler.add_encoder("down", "up", encoder_callback)
-            input_handler.add_button("enter", {
+            keyboard_input_handler.add_encoder("down", "up", encoder_callback)
+            keyboard_input_handler.add_button("enter", {
                 ButtonEvent.PRESS: lambda: self.event_queue.put(DeviceEvent(EventType.ENCODER_SELECT))
             })
+            input_handlers.append(keyboard_input_handler)
 
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.CONSOLE)
             self.lcd.clear()
         else:
-            # Input Handler Setup
-            input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.GPIO, self.context.data.config)
+            # GPIO Input Handler Setup
+            gpio_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.GPIO, self.context.data.config)
 
             def encoder_callback(direction):
                 if direction == 1:
@@ -73,20 +75,20 @@ class MidiNodeDevice:
                 else:
                     self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
 
-            input_handler.add_encoder(clk_pin=18, dt_pin=17, callback=encoder_callback)
-            input_handler.add_button(pin=27, actions={
+            gpio_input_handler.add_encoder(clk_pin=18, dt_pin=17, callback=encoder_callback)
+            gpio_input_handler.add_button(pin=27, actions={
                 ButtonEvent.PRESS: lambda q=self.event_queue: q.put(DeviceEvent(EventType.ENCODER_SELECT))
             })
 
             default_key_map = {
-                Control.BUTTON_1: 6,
-                Control.BUTTON_2: 13,
-                Control.BUTTON_3: 19,
-                Control.BUTTON_4: 26,
+                Control.BUTTON_1: 6,  # GPIO_06
+                Control.BUTTON_2: 13, # GPIO_13
+                Control.BUTTON_3: 19, # GPIO_19
+                Control.BUTTON_4: 26, # GPIO_26
             }
 
             for control, button in default_key_map.items():
-                input_handler.add_button(pin=button, actions={
+                gpio_input_handler.add_button(pin=button, actions={
                     ButtonEvent.PRESS: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.PRESS].execute()),
                     ButtonEvent.RELEASE: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.RELEASE].execute()),
                     ButtonEvent.TAP: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.TAP].execute()),
@@ -95,14 +97,25 @@ class MidiNodeDevice:
                     ButtonEvent.LONG_PRESS: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.LONG_PRESS].execute()),
                     ButtonEvent.LONG_PRESS_RELEASE: (lambda c=control, controls=self.context.data.preset.controls: controls[c].actions[ButtonEvent.LONG_PRESS_RELEASE].execute()),
                 })
+            gpio_input_handler.setup_gpio() # Setup GPIO after all pins are added
+            input_handlers.append(gpio_input_handler)
 
+            # ADS1115 Input Handler Setup
+            if self.context.data.config.ads1115_enabled:
+                ads1115_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.ADS1115, self.context.data.config)
+                
+                ads1115_input_handler.add_potentiometer("EXP_PEDAL_1", 0, 
+                    self.context.data.preset.controls[Control.EXP_PEDAL_1].actions)
+                ads1115_input_handler.add_potentiometer("EXP_PEDAL_2", 1,
+                    self.context.data.preset.controls[Control.EXP_PEDAL_2].actions)
+                input_handlers.append(ads1115_input_handler)
 
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.LCD2004)
             self.lcd.clear()
 
-
-        self.input_thread = InputManager(self.event_queue, self.shutdown_event, input_handler=input_handler)
+        # Input Manager now takes a list of handlers
+        self.input_thread = InputManager(self.event_queue, self.shutdown_event, input_handlers=input_handlers, config=self.context.data.config)
         self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
     
         self.context.state.push_state(HomeState(self.context))

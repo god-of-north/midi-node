@@ -66,24 +66,23 @@ class KeyboardInputHandler(InputHandler):
         if action:
             action()
 
-    def start(self, shutdown_event=None):
-        print("Mock Input Manager started.")
-        print("Controls: Use mapped keys. Press Ctrl+C to stop.")
-        try:
-            while not (shutdown_event and shutdown_event.is_set()):
-                # 1. Process "Hardware" Events
-                while self.event_queue:
-                    event = self.event_queue.popleft()
-                    if event.line_offset in self.buttons:
-                        self._handle_mock_hardware_event(event)
-                
-                # 2. Check timeouts (Long press / Multi-tap)
-                self._check_all_timeouts()
-                
-                # Sleep to prevent 100% CPU usage on PC
-                time.sleep(0.01)
-        except KeyboardInterrupt:
-            print("\nShutting down Mock...")
+    def tick(self):
+        # 1. Process "Hardware" Events
+        while self.event_queue:
+            event = self.event_queue.popleft()
+            if event.line_offset in self.buttons:
+                self._handle_mock_hardware_event(event)
+        
+        # 2. Check timeouts (Long press / Multi-tap)
+        self._check_all_timeouts()
+    
+    def stop(self):
+        """
+        Stops the input handler. For KeyboardInputHandler, this mainly means unhooking
+        keyboard events if necessary. For now, we'll let the program termination handle it.
+        """
+        # keyboard.unhook_all() # Could be used if explicit unhooking is desired
+        pass
 
     def _handle_mock_hardware_event(self, event):
         key = event.line_offset

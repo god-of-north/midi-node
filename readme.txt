@@ -12,6 +12,9 @@
 - Network MIDI
 - Receive MIDI and route
 - Expression Pedals
+- TAP tempo
+- sync to external tempo
+- Python script action
 - 
 
 

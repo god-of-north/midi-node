@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class InputHandler(ABC):
@@ -8,5 +8,12 @@ class InputHandler(ABC):
     def add_encoder(self, left_key, right_key, callback):
         raise NotImplementedError
 
-    def start(self, shutdown_event=None):
-        raise NotImplementedError
+    @abstractmethod
+    def tick(self):
+        """Processes one cycle of input events."""
+        pass
+
+    @abstractmethod
+    def stop(self):
+        """Stops the input handler and releases any resources."""
+        pass

@@ -10,14 +10,6 @@ from .button_event import ButtonEvent
 from .input_handler import InputHandler
 
 
-# class ButtonEvent(Enum):
-#     PRESS = auto()
-#     RELEASE = auto()
-#     TAP = auto()
-#     DOUBLE_TAP = auto()
-#     TRIPLE_TAP = auto()
-#     LONG_PRESS = auto()
-
 class RotaryEncoder:
     def __init__(self, clk_pin, dt_pin, on_rotate):
         self.clk_pin = clk_pin
@@ -40,6 +32,7 @@ class GPIOInputHandler(InputHandler):
         self.encoders = {}
         self.all_pins = []
         self.config = config
+        self._chip_request = None # Will hold the gpiod.Lines object
 
     def add_button(self, pin, actions):
         logging.info(f"Adding button on pin {pin}")
@@ -59,6 +52,23 @@ class GPIOInputHandler(InputHandler):
         if clk_pin not in self.all_pins: self.all_pins.append(clk_pin)
         if dt_pin not in self.all_pins: self.all_pins.append(dt_pin)
 
+    def setup_gpio(self):
+        """Initializes the gpiod lines after all buttons and encoders are added."""
+        configs = {}
+        for pin in self.all_pins:
+            configs[pin] = gpiod.LineSettings(
+                direction=Direction.INPUT,
+                bias=Bias.PULL_UP,
+                edge_detection=Edge.BOTH,
+                debounce_period=timedelta(milliseconds=5) 
+            )
+        try:
+            self._chip_request = gpiod.request_lines(self.chip_path, consumer="multi_ctrl", config=configs)
+            logging.info("GPIO lines successfully requested.")
+        except Exception as e:
+            logging.error(f"Failed to request GPIO lines: {e}. Is gpiod installed and permissions set?")
+            self._chip_request = None
+
     def _fire(self, pin_data, event_type: ButtonEvent):
         logging.info(f"Firing event {event_type}")
 
@@ -69,31 +79,28 @@ class GPIOInputHandler(InputHandler):
         else:
             logging.info(f"No action defined for event {event_type}")
 
-    def start(self, shutdown_event=None):
-        configs = {}
-        for pin in self.all_pins:
-            # We use Edge.BOTH for everything, but filter inside the logic
-            configs[pin] = gpiod.LineSettings(
-                direction=Direction.INPUT,
-                bias=Bias.PULL_UP,
-                edge_detection=Edge.BOTH,
-                debounce_period=timedelta(milliseconds=5) 
-            )
+    def tick(self):
+        if not self._chip_request:
+            return # GPIO not setup or failed
 
-        with gpiod.request_lines(self.chip_path, consumer="multi_ctrl", config=configs) as request:
-            while not (shutdown_event and shutdown_event.is_set()):
-                # Wait for events with a short timeout to allow check_all_timeouts to run
-                if request.wait_edge_events(timedelta(milliseconds=10)):
-                    for event in request.read_edge_events():
-                        pin = event.line_offset
-                        
-                        if pin in self.encoders:
-                            self.encoders[pin].process(event, request)
-                        
-                        elif pin in self.buttons:
-                            self._handle_hardware_event(event)
+        # Wait for events with a short timeout to allow check_all_timeouts to run
+        if self._chip_request.wait_edge_events(timedelta(milliseconds=1)): # Reduced timeout for faster loop
+            for event in self._chip_request.read_edge_events():
+                pin = event.line_offset
                 
-                self._check_all_timeouts()
+                if pin in self.encoders:
+                    self.encoders[pin].process(event, self._chip_request)
+                
+                elif pin in self.buttons:
+                    self._handle_hardware_event(event)
+        
+        self._check_all_timeouts()
+
+    def stop(self):
+        if self._chip_request:
+            logging.info("Releasing GPIO lines.")
+            self._chip_request.release()
+            self._chip_request = None # Clear the reference
 
     def _handle_hardware_event(self, event):
         pin = event.line_offset
@@ -135,22 +142,3 @@ class GPIOInputHandler(InputHandler):
                     self._fire(data, event)
                     data["tap_count"] = 0
                     data["tap_timer_start"] = None
-
-if __name__ == "__main__":
-    handler = GPIOInputHandler()
-    
-    def encoder_callback(direction):
-        print(f"Rotation: {'CW' if direction == 1 else 'CCW'}")
-
-    handler.add_encoder(clk_pin=17, dt_pin=18, callback=encoder_callback)
-    handler.add_button(pin=27, actions={
-        ButtonEvent.TAP: lambda: print("Button: Tap"),
-        ButtonEvent.DOUBLE_TAP: lambda: print("Button: Double Tap"),
-        ButtonEvent.LONG_PRESS: lambda: print("Button: Long Press"),
-        ButtonEvent.PRESS: lambda: print("Button: Press"),
-        ButtonEvent.RELEASE: lambda: print("Button: Release"),
-        ButtonEvent.TRIPLE_TAP: lambda: print("Button: Triple Tap"),
-    })
-
-    print("Listening... Press Ctrl+C to stop.")
-    handler.start()

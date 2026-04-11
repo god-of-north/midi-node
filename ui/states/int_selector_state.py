@@ -11,13 +11,15 @@ class IntNumberSelectorState(DeviceState):
         min_value: int = 0,
         max_value: int = 100,
         value: int = 0,
-        header: str = "Integer Selector"
+        header: str = "Integer Selector",
+        base: int = 10
     ):
         super().__init__(context)
 
         self.min_value = min_value
         self.max_value = max_value
         self.header = header
+        self.base = base
 
         self.origin_x = 0
         self.origin_y = 0
@@ -90,16 +92,20 @@ class IntNumberSelectorState(DeviceState):
         Format value for display (zero-padded).
         """
         sign = "-" if value < 0 else ""
+
+        if self.base == 16:
+            return f"{sign}{abs(value):0{self._num_width}X} HEX"
         return f"{sign}{abs(value):0{self._num_width}d}"
 
 class IntSelectorState(IntNumberSelectorState):
-    def __init__(self, context, value: int = 0, callback=None, header="Set Value:", min_value=0, max_value=100):
+    def __init__(self, context, value: int = 0, callback=None, header="Set Value:", min_value=0, max_value=100, base: int = 10):
         super().__init__(
             context,
             min_value=min_value,
             max_value=max_value,
             value=value,
-            header=header
+            header=header,
+            base=base
         )
         self.callback = callback
 
