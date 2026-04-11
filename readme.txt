@@ -1,3 +1,20 @@
+#TODO
+- PC up/down actions
+- CC grow/fall actions (value grow/fall/bounce consistantley when button pressed)
+- LFO action
+- Envelope action
+- Adjust input paramenters (debounce, long_press time, tap time,..)
+- Actions on PresetEnter, PresetExit
+- Actions on BankEnter, BankExit
+- Banks
+- Bank selection Actions
+- WiFi settings (connect/disconnect)
+- Bluetooth MIDI
+- Network MIDI
+- Receive MIDI and route
+- Expression Pedals
+- 
+
 
 # enable I2C in config
 sudo raspi-config
