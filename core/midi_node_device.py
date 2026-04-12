@@ -1,6 +1,7 @@
 import threading
 import queue
 import logging
+import time
 
 from controls.control import Control
 from core.device_event import DeviceEvent, EventType
@@ -19,8 +20,8 @@ from display import DisplayFactory, DisplayType
 class MidiNodeDevice:
     def __init__(self):
         # Event Queues and Shutdown Event
-        self.event_queue = queue.Queue()
-        self.ui_queue = queue.Queue()
+        self.event_queue = queue.SimpleQueue()
+        self.ui_queue = queue.SimpleQueue()
         self.shutdown_event = threading.Event()
 
         self.midi = MidiRouter()
@@ -174,13 +175,14 @@ class MidiNodeDevice:
     def _main_loop(self):
         while not self.shutdown_event.is_set():
             try:
-                event = self.event_queue.get(timeout=0.5)
+                event = self.event_queue.get_nowait()
 
                 logging.info(f"Processing event: {event}")
 
                 self.context.state.current_state.handle_event(event)
-                self.event_queue.task_done()
+
             except queue.Empty:
+                time.sleep(0.01)
                 continue
 
     def stop(self):

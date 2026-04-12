@@ -1,5 +1,5 @@
 from .action import Action, ActionParam, ActionRegistry, ActionRegistryEntry
-from .cc_action import CCAction
+from .cc_action import CCAction, LinearCCAction, ExponentialCCAction
 from .composite_action import CompositeAction
 from .info_action import InfoAction
 from .pc_action import PCAction
@@ -29,5 +29,7 @@ __all__ = [
     "PreviousPresetAction",
     "NextPresetAction",
     "ToggleAction",
-    "EmptyAction"
+    "EmptyAction",
+    "LinearCCAction",
+    "ExponentialCCAction",
 ]

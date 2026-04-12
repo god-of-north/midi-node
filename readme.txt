@@ -1,5 +1,4 @@
 #TODO
-- Expression Pedals
 - PC up/down actions
 - CC grow/fall actions (value grow/fall/bounce consistantley when button pressed)
 - LFO action

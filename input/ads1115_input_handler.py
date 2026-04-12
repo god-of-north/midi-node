@@ -108,9 +108,7 @@ class ADS1115InputHandler(InputHandler):
             logging.warning(f"ADS1115 not initialized, potentiometer {name} will not function.")
             chan = None # Assign None to channel if ADS is not initialized
         else:
-            # Mapping analog_pin (0-3) to ADS.P0, ADS.P1, etc.
-            ads_pin = getattr(ADS, f"P{analog_pin}")
-            chan = AnalogIn(self.ads, ads_pin)
+            chan = AnalogIn(self.ads, analog_pin)
         
         pot = Potentiometer(name, chan, actions)
         self.potentiometers.append(pot)

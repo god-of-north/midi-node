@@ -18,7 +18,7 @@ ads.gain = 1
 
 # Define the analog input channel (single-ended mode).
 # Connect your analog signal to the AIN0 pin (P0).
-chan = AnalogIn(ads, ADS.P0)
+chan = AnalogIn(ads, 0)
 
 # Continuously print the values
 print("{:>5}\t{:>5}".format('Raw Value', 'Voltage'))

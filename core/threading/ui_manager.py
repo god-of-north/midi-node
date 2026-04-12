@@ -1,6 +1,7 @@
 import threading
 import queue
 import logging
+import time
 from ..device_event import EventType
 from display.display_provider import DisplayProvider
 
@@ -19,7 +20,7 @@ class UIManager(threading.Thread):
         while not self.shutdown.is_set():
             try:
                 # Block for 0.5s to keep the loop responsive to shutdown
-                event = self.queue.get(timeout=0.5)
+                event = self.queue.get_nowait()
                 
                 if event.type == EventType.LCD_TEXT:
                     self.out_data.update(event.data)
@@ -27,8 +28,8 @@ class UIManager(threading.Thread):
                 elif event.type == EventType.LCD_CLEAR:
                     self.display.clear()
 
-                self.queue.task_done()
             except queue.Empty:
+                time.sleep(0.01)
                 continue
         
         self.display.clear()
