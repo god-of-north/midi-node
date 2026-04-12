@@ -10,6 +10,7 @@ from .previous_preset_action import PreviousPresetAction
 from .next_preset_action import NextPresetAction
 from .toggle_action import ToggleAction
 from .empty_action import EmptyAction
+from .lfo_action import LFOAction, LFOActionType, LFOActionStartDirection, LFOActionWaveform
 
 __all__ = [
     "Action",
@@ -32,4 +33,8 @@ __all__ = [
     "EmptyAction",
     "LinearCCAction",
     "ExponentialCCAction",
+    "LFOAction",
+    "LFOActionType",
+    "LFOActionStartDirection",
+    "LFOActionWaveform",
 ]

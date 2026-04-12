@@ -14,10 +14,9 @@ from storage.preset import Preset
 from controls.control import Control, ControlType
 from controls.control_model import ButtonControlModel, PotControlModel
 from input.button_event import ButtonEvent
-from actions import InfoAction
-
 class DataContext:
     def __init__(self, device_context: 'DeviceContext'):
+        from actions import InfoAction # Local import to break circular dependency
         self.storage = StorageManager("./data", context=device_context)
 
         self.config = self.storage.load_app_config()
