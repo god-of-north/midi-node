@@ -16,12 +16,30 @@ class RotaryEncoder:
         self.dt_pin = dt_pin
         self.on_rotate = on_rotate 
 
+        self.last_clk_falling_time = 0
+        self.last_dt_value = 0
+        self.rotation_threshold = 0.1
+
     def process(self, event, chip_request):
-        # Only process on the FALLING edge of the CLK pin.
-        if event.event_type != EdgeEvent.Type.FALLING_EDGE:
-            return
 
         dt_val = chip_request.get_value(self.dt_pin)
+
+        # print(f"CLK event: {event.event_type}, DT value: {dt_val}, Time: {time.time():.3f}")
+
+        if event.event_type == EdgeEvent.Type.FALLING_EDGE:
+            self.last_clk_falling_time = time.time()
+            self.last_dt_value = dt_val
+
+            # print(f"CLK falling edge detected. Updated last_clk_rising_time: {self.last_clk_falling_time:.3f}, last_dt_value: {self.last_dt_value}")
+
+            return
+
+        if self.last_clk_falling_time == 0 or (time.time() - self.last_clk_falling_time) > self.rotation_threshold or dt_val == self.last_dt_value:
+
+            # print(f"Ignoring CLK rising edge. Time since last falling: {time.time() - self.last_clk_falling_time:.3f}s, DT value: {dt_val}, Last DT value: {self.last_dt_value}")
+
+            return
+
         direction = 1 if dt_val == Value.ACTIVE else -1
         self.on_rotate(direction)
 
