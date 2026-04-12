@@ -1,5 +1,5 @@
 #TODO
-- PC up/down actions
+- PC up/down actions (from list)
 - CC grow/fall actions (value grow/fall/bounce consistantley when button pressed)
 - LFO action
 - Envelope action
