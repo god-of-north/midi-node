@@ -5,11 +5,11 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "ALT [1]",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "pc",
+                    "channel": 1,
+                    "output": "UART",
+                    "port_name": "/dev/serial0",
+                    "pc": 1
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"
@@ -35,11 +35,11 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "ALT [2]",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "pc",
+                    "channel": 1,
+                    "output": "UART",
+                    "port_name": "/dev/serial0",
+                    "pc": 2
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"
@@ -65,11 +65,11 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "ALT [3]",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "pc",
+                    "channel": 1,
+                    "output": "UART",
+                    "port_name": "/dev/serial0",
+                    "pc": 3
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"
@@ -95,11 +95,11 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "ALT [4]",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "pc",
+                    "channel": 1,
+                    "output": "UART",
+                    "port_name": "/dev/serial0",
+                    "pc": 4
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"

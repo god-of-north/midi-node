@@ -11,6 +11,7 @@ from .next_preset_action import NextPresetAction
 from .toggle_action import ToggleAction
 from .empty_action import EmptyAction
 from .lfo_action import LFOAction, LFOActionType, LFOActionStartDirection, LFOActionWaveform
+from .envelope_action import EnvelopeAction, EnvelopeActionType
 from .select_bank_action import SelectBankAction
 from .next_bank_action import NextBankAction
 from .previous_bank_action import PreviousBankAction
@@ -40,4 +41,6 @@ __all__ = [
     "LFOActionType",
     "LFOActionStartDirection",
     "LFOActionWaveform",
+    "EnvelopeAction",
+    "EnvelopeActionType",
 ]
