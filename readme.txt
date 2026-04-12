@@ -1,9 +1,9 @@
 #TODO
+- Configure: Actions on PresetEnter, PresetExit
+- Configure: Actions on BankEnter, BankExit
 - Envelope action
 - Delayed action
 - Tremolo/Slicer action
-- Actions on PresetEnter, PresetExit
-- Actions on BankEnter, BankExit
 - WiFi settings (connect/disconnect)
 - Bluetooth MIDI
 - Network MIDI
@@ -11,6 +11,8 @@
 - TAP tempo
 - sync to external tempo
 - Python script action
+- Pass context in Action.execute() not in constructor
+- Move Base classes/interfaces to Core
 - 
 
 

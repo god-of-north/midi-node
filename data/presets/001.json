@@ -6,14 +6,29 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "ALT [1]", "line": 2
+                    "info": "ALT [1]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "ButtonEvent.RELEASE":  {"type": "empty"},
-                "ButtonEvent.TAP":  {"type": "empty"},
-                "ButtonEvent.DOUBLE_TAP":  {"type": "empty"},
-                "ButtonEvent.TRIPLE_TAP":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS_RELEASE":  {"type": "empty"}
+                "ButtonEvent.RELEASE": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "empty"
+                }
             }
         },
         "Control.BUTTON_2": {
@@ -21,14 +36,29 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "ALT [2]", "line": 2
+                    "info": "ALT [2]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "ButtonEvent.RELEASE":  {"type": "empty"},
-                "ButtonEvent.TAP":  {"type": "empty"},
-                "ButtonEvent.DOUBLE_TAP":  {"type": "empty"},
-                "ButtonEvent.TRIPLE_TAP":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS_RELEASE":  {"type": "empty"}
+                "ButtonEvent.RELEASE": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "empty"
+                }
             }
         },
         "Control.BUTTON_3": {
@@ -36,14 +66,29 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "ALT [3]", "line": 2
+                    "info": "ALT [3]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "ButtonEvent.RELEASE":  {"type": "empty"},
-                "ButtonEvent.TAP":  {"type": "empty"},
-                "ButtonEvent.DOUBLE_TAP":  {"type": "empty"},
-                "ButtonEvent.TRIPLE_TAP":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS_RELEASE":  {"type": "empty"}
+                "ButtonEvent.RELEASE": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "empty"
+                }
             }
         },
         "Control.BUTTON_4": {
@@ -51,14 +96,29 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "ALT [4]", "line": 2
+                    "info": "ALT [4]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "ButtonEvent.RELEASE":  {"type": "empty"},
-                "ButtonEvent.TAP":  {"type": "empty"},
-                "ButtonEvent.DOUBLE_TAP":  {"type": "empty"},
-                "ButtonEvent.TRIPLE_TAP":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS":  {"type": "empty"},
-                "ButtonEvent.LONG_PRESS_RELEASE":  {"type": "empty"}
+                "ButtonEvent.RELEASE": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "empty"
+                }
             }
         },
         "Control.EXP_PEDAL_1": {
@@ -66,14 +126,29 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp-1 [__value__]", "line": 2
+                    "info": "Exp-1 [__value__]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "PotEvent.ON_MIN": {"type": "empty"},
-                "PotEvent.ON_MAX": {"type": "empty"},
-                "PotEvent.LEAVE_MIN": {"type": "empty"},
-                "PotEvent.LEAVE_MAX": {"type": "empty"},
-                "PotEvent.CHANGE_DIRECTION": {"type": "empty"},
-                "PotEvent.STOP_CHANGING": {"type": "empty"}
+                "PotEvent.ON_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.ON_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.CHANGE_DIRECTION": {
+                    "type": "empty"
+                },
+                "PotEvent.STOP_CHANGING": {
+                    "type": "empty"
+                }
             }
         },
         "Control.EXP_PEDAL_2": {
@@ -81,15 +156,36 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp-2 [__value__]", "line": 2
+                    "info": "Exp-2 [__value__]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "PotEvent.ON_MIN": {"type": "empty"},
-                "PotEvent.ON_MAX": {"type": "empty"},
-                "PotEvent.LEAVE_MIN": {"type": "empty"},
-                "PotEvent.LEAVE_MAX": {"type": "empty"},
-                "PotEvent.CHANGE_DIRECTION": {"type": "empty"},
-                "PotEvent.STOP_CHANGING": {"type": "empty"}
+                "PotEvent.ON_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.ON_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.CHANGE_DIRECTION": {
+                    "type": "empty"
+                },
+                "PotEvent.STOP_CHANGING": {
+                    "type": "empty"
+                }
             }
         }
+    },
+    "enter_action": {
+        "type": "empty"
+    },
+    "exit_action": {
+        "type": "empty"
     }
 }

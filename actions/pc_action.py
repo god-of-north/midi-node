@@ -33,6 +33,11 @@ class ChangePCAction(MIDIAction):
     def __init__(self, direction:ChangePCDirection=ChangePCDirection.NEXT, slot:int=0, min_pc:int=0, max_pc:int=127, style:ChangePCStyle=ChangePCStyle.CYCLE, **kwargs):
         super().__init__(**kwargs)
 
+        if isinstance(direction, str):
+            direction = ChangePCDirection[direction]
+        if isinstance(style, str):
+            style = ChangePCStyle[style]
+
         self.params["direction"] = ActionParam("direction", ChangePCDirection, direction, default=ChangePCDirection.NEXT)
         self.params["slot"] = ActionParam("slot", int, slot, default=0, options={"min_value":0, "max_value":100, "header":"Toggle Slot"})
         self.params["min_pc"] = ActionParam("min_pc", int, min_pc, default=0, options={"min_value":0, "max_value":127, "header":"Min PC"})

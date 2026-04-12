@@ -7,6 +7,10 @@ class InfoAction(Action):
 
     def __init__(self, info:str = "Info", line:int=2, clear_scr:bool=False, align:AlignText=AlignText.CENTER, **kwargs):
         super().__init__(**kwargs)
+
+        if isinstance(align, str):
+            align = AlignText[align]
+
         self.params["info"] = ActionParam("info", str, info)
         self.params["line"] = ActionParam("line", int, line, default=1, options={"min_value":1, "max_value":4, "header":"Line"})
         self.params["clear_scr"] = ActionParam("clear_scr", bool, clear_scr, default=False, options={"header":"Clear Screen"})

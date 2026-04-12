@@ -124,6 +124,15 @@ class LFOAction(MIDIAction):
 
         super().__init__(context=context, output=output, port_name=port_name, channel=channel, **kwargs)
 
+        if isinstance(action_type, str):
+            action_type = LFOActionType[action_type]
+        if isinstance(start_direction, str):
+            start_direction = LFOActionStartDirection[start_direction]
+        if isinstance(waveform, str):
+            waveform = LFOActionWaveform[waveform]
+        if isinstance(output, str):
+            output = MidiOutputType[output]
+
         self.params["action_type"] = ActionParam("action_type", LFOActionType, action_type, default=LFOActionType.START, options={"header":"LFO Action", "enum_options": [e.value for e in LFOActionType]})
         self.params["slot"] = ActionParam("slot", int, slot, default=0, options={"min_value":0, "max_value":99, "header":"LFO Slot"})
         self.params["cc"] = ActionParam("cc", int, cc, default=0, options={"min_value":0, "max_value":127, "header":"MIDI CC"})

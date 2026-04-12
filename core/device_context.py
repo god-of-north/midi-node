@@ -81,9 +81,13 @@ class DataContext:
             logging.info(f"Preset {preset_number} is already active.")
             return
 
+        self.preset.exit_action.execute() # Execute exit action of current preset before switching
+
         self.preset = self.storage.load_preset(preset_number)
         self.storage.save_current_preset_index(preset_number)
         self.current_preset_index = preset_number
+        
+        self.preset.enter_action.execute() # Execute enter action of new preset after switching
 
     def save_app_config(self):
         self.storage.save_app_config(self.config)

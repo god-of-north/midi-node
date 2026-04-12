@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum
 from typing import Dict, List, Optional, Type, Any, Union
 
 from actions.param_selector import CustomSelectorType
@@ -89,12 +90,17 @@ class Action:
         result = {"type": self.TYPE}
         
         for param in self.params.values():
-            if hasattr(param.value, "to_dict"):
-                result[param.name] = param.value.to_dict()
-            elif isinstance(param.value, list):
-                result[param.name] = self.list_to_dict(param.value)
+            name = param.name
+            value = param.value
+
+            if hasattr(value, "to_dict"):
+                result[name] = value.to_dict()
+            elif isinstance(value, list):
+                result[name] = self.list_to_dict(value)
+            elif isinstance(value, Enum):
+                result[name] = value.name
             else:
-                result[param.name] = param.value
+                result[name] = value
 
         return result
     

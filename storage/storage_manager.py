@@ -142,7 +142,7 @@ class StorageManager:
         if not path.exists():
             return None
         with open(path, 'r') as f:
-            return Bank.from_dict(json.load(f))
+            return Bank.from_dict(json.load(f), context=self.context)
 
     def get_bank_list(self) -> List[dict]:
         banks = []
