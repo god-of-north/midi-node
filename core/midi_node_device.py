@@ -67,7 +67,7 @@ class MidiNodeDevice:
             # Mouse Input Handler Setup
             mouse_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.MOUSE, self.context.data.config)
 
-            mouse_input_handler.add_potentiometer("EXP_PEDAL_1", 0, actions={
+            mouse_input_handler.add_potentiometer(Control.EXP_PEDAL_1.name, 0, actions={
                 PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.CHANGE_VALUE].execute(value=value)),
                 PotEvent.ON_MIN: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.ON_MIN].execute(value=value)),
                 PotEvent.ON_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.ON_MAX].execute(value=value)),
@@ -75,8 +75,8 @@ class MidiNodeDevice:
                 PotEvent.LEAVE_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.LEAVE_MAX].execute(value=value)),
                 PotEvent.CHANGE_DIRECTION: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.CHANGE_DIRECTION].execute(value=value)),
                 PotEvent.STOP_CHANGING: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.STOP_CHANGING].execute(value=value)),
-            })
-            mouse_input_handler.add_potentiometer("EXP_PEDAL_2", 1, actions={
+            }, calibration=self.context.data.config.pot_calibration[Control.EXP_PEDAL_1])
+            mouse_input_handler.add_potentiometer(Control.EXP_PEDAL_2.name, 1, actions={
                 PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.CHANGE_VALUE].execute(value=value)),
                 PotEvent.ON_MIN: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.ON_MIN].execute(value=value)),
                 PotEvent.ON_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.ON_MAX].execute(value=value)),
@@ -84,7 +84,7 @@ class MidiNodeDevice:
                 PotEvent.LEAVE_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.LEAVE_MAX].execute(value=value)),
                 PotEvent.CHANGE_DIRECTION: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.CHANGE_DIRECTION].execute(value=value)),
                 PotEvent.STOP_CHANGING: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.STOP_CHANGING].execute(value=value)),
-            })
+            }, calibration=self.context.data.config.pot_calibration[Control.EXP_PEDAL_2])
             input_handlers.append(mouse_input_handler)
 
 
@@ -129,7 +129,7 @@ class MidiNodeDevice:
             # ADS1115 Input Handler Setup
             ads1115_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.ADS1115, self.context.data.config)
 
-            ads1115_input_handler.add_potentiometer("EXP_PEDAL_1", 0, actions={
+            ads1115_input_handler.add_potentiometer(Control.EXP_PEDAL_1.name, 0, actions={
                 PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.CHANGE_VALUE].execute(value=value)),
                 PotEvent.ON_MIN: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.ON_MIN].execute(value=value)),
                 PotEvent.ON_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.ON_MAX].execute(value=value)),
@@ -137,9 +137,8 @@ class MidiNodeDevice:
                 PotEvent.LEAVE_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.LEAVE_MAX].execute(value=value)),
                 PotEvent.CHANGE_DIRECTION: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.CHANGE_DIRECTION].execute(value=value)),
                 PotEvent.STOP_CHANGING: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.STOP_CHANGING].execute(value=value)),
-
-            })
-            ads1115_input_handler.add_potentiometer("EXP_PEDAL_2", 1, actions={
+            }, calibration=self.context.data.config.pot_calibration[Control.EXP_PEDAL_1])
+            ads1115_input_handler.add_potentiometer(Control.EXP_PEDAL_2.name, 1, actions={
                 PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.CHANGE_VALUE].execute(value=value)),
                 PotEvent.ON_MIN: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.ON_MIN].execute(value=value)),
                 PotEvent.ON_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.ON_MAX].execute(value=value)),
@@ -147,7 +146,7 @@ class MidiNodeDevice:
                 PotEvent.LEAVE_MAX: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.LEAVE_MAX].execute(value=value)),
                 PotEvent.CHANGE_DIRECTION: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.CHANGE_DIRECTION].execute(value=value)),
                 PotEvent.STOP_CHANGING: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.STOP_CHANGING].execute(value=value)),
-            })
+            }, calibration=self.context.data.config.pot_calibration[Control.EXP_PEDAL_2])
             input_handlers.append(ads1115_input_handler)
 
             # LCD Setup

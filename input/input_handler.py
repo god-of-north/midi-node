@@ -1,11 +1,16 @@
 from abc import ABC, abstractmethod
 
+from storage.app_config import PotCalibration
+
 
 class InputHandler(ABC):
     def add_button(self, key_name, actions, tap_time=0.25, long_press=0.6):
         raise NotImplementedError
 
     def add_encoder(self, left_key, right_key, callback):
+        raise NotImplementedError
+
+    def add_potentiometer(self, name: str, analog_pin: int, actions: dict, calibration: PotCalibration):
         raise NotImplementedError
 
     @abstractmethod

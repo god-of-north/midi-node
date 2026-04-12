@@ -3,6 +3,32 @@
     "buttons_long_press_time": 0.6,
     "ads1115_address": 72,
     "ads1115_gain": 1,
-    "ads1115_pot_threshold": 200,
-    "input_poll_interval": 0.01
+    "ads1115_pot_threshold": 1,
+    "ads1115_enabled": true,
+    "input_poll_interval": 0.01,
+    "mouse_input_enabled": true,
+    "mouse_pot_sensitivity": 500,
+    "mouse_pot_threshold": 1,
+    "pot_calibration": {
+        "EXP_PEDAL_1": {
+            "min_value": 500,
+            "max_value": 32000,
+            "min_threshold": 500,
+            "max_threshold": 32000,
+            "stop_changing_timeout": 0.1,
+            "ema_filter_alpha_min": 0.1,
+            "ema_filter_alpha_max": 0.6,
+            "ema_filter_sensitivity": 0.11
+        },
+        "EXP_PEDAL_2": {
+            "min_value": 500,
+            "max_value": 32000,
+            "min_threshold": 500,
+            "max_threshold": 32000,
+            "stop_changing_timeout": 0.1,
+            "ema_filter_alpha_min": 0.1,
+            "ema_filter_alpha_max": 0.6,
+            "ema_filter_sensitivity": 0.1
+        }
+    }
 }

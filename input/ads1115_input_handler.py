@@ -7,28 +7,34 @@ import board
 import busio
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
+from input.adaptive_ema_filter import AdaptiveEMAFilter
 
 from .input_handler import InputHandler
 from .pot_event import PotEvent
-from storage.app_config import AppConfig
+from storage.app_config import AppConfig, PotCalibration
 
-# Define constants for potentiometer events
-POT_MIN_THRESHOLD = 500  # Raw value to consider as "min"
-POT_MAX_THRESHOLD = 32000  # Raw value to consider as "max"
-POT_STOP_CHANGING_TIMEOUT = 0.1  # Seconds after last change to fire STOP_CHANGING
 
 class Potentiometer:
-    def __init__(self, name: str, analog_in_channel: AnalogIn, actions: dict):
+    def __init__(self, name: str, analog_in_channel: AnalogIn, actions: dict, calibration: PotCalibration):
         self.name = name
         self.channel = analog_in_channel
         self.actions = actions
+        self.calibration = calibration
         self.last_value = self.channel.value if analog_in_channel else 0 # Initialize with current value or 0
         self.last_direction = 0  # 1 for increasing, -1 for decreasing, 0 for no change
         self.last_change_time = time.time()
         self.is_min = False
         self.is_max = False
+        self.ema_filter = AdaptiveEMAFilter(calibration)
 
     def process_value(self, current_value: int, threshold: int):
+
+        # Update the current value using the adaptive EMA filter to reduce noise while maintaining responsiveness
+        current_value = self.ema_filter.filter(current_value)
+
+        # Apply calibration to the current value
+        current_value = self._apply_calibration(current_value)
+
         # Check for significant change to avoid noise
         if abs(current_value - self.last_value) > threshold:
             self._fire_event(PotEvent.CHANGE_VALUE, current_value)
@@ -50,22 +56,22 @@ class Potentiometer:
             self.is_max = False
 
         # Check for min/max thresholds
-        if current_value < POT_MIN_THRESHOLD and not self.is_min:
+        if current_value < 0 and not self.is_min:
             self._fire_event(PotEvent.ON_MIN, current_value)
             self.is_min = True
-        elif current_value >= POT_MIN_THRESHOLD and self.is_min:
+        elif current_value >= 0 and self.is_min:
             self._fire_event(PotEvent.LEAVE_MIN, current_value)
             self.is_min = False
-        
-        if current_value > POT_MAX_THRESHOLD and not self.is_max:
+
+        if current_value > 127 and not self.is_max:
             self._fire_event(PotEvent.ON_MAX, current_value)
             self.is_max = True
-        elif current_value <= POT_MAX_THRESHOLD and self.is_max:
+        elif current_value <= 127 and self.is_max:
             self._fire_event(PotEvent.LEAVE_MAX, current_value)
             self.is_max = False
 
     def check_stop_changing(self):
-        if (time.time() - self.last_change_time) > POT_STOP_CHANGING_TIMEOUT and self.last_direction != 0:
+        if (time.time() - self.last_change_time) > self.calibration.stop_changing_timeout and self.last_direction != 0:
             self._fire_event(PotEvent.STOP_CHANGING, self.last_value)
             self.last_direction = 0 # Reset direction after stop changing event
 
@@ -76,6 +82,18 @@ class Potentiometer:
             action(value)
         else:
             logging.debug(f"No action defined for PotEvent {event_type} on {self.name}")
+
+    def _apply_calibration(self, raw_value: int) -> int:
+        # Simple linear calibration based on min/max values
+        if raw_value < self.calibration.min_threshold:
+            return 0
+        elif raw_value > self.calibration.max_threshold:
+            return 127
+        else:
+            # Scale the raw value to the 0-127 range based on calibration thresholds
+            scaled_value = int((raw_value - self.calibration.min_threshold) * 127 / (self.calibration.max_threshold - self.calibration.min_threshold))
+            return max(0, min(127, scaled_value)) # Ensure within bounds
+
 
 class ADS1115InputHandler(InputHandler):
     def __init__(self, config: AppConfig):
@@ -102,15 +120,15 @@ class ADS1115InputHandler(InputHandler):
             logging.error(f"An unexpected error occurred during ADS1115 initialization: {e}")
             self.ads = None
 
-    def add_potentiometer(self, name: str, analog_pin: int, actions: dict):
+    def add_potentiometer(self, name: str, analog_pin: int, actions: dict, calibration: PotCalibration):
         # We allow adding pots even if ads is None, but they won't function
         if self.ads is None:
             logging.warning(f"ADS1115 not initialized, potentiometer {name} will not function.")
             chan = None # Assign None to channel if ADS is not initialized
         else:
             chan = AnalogIn(self.ads, analog_pin)
-        
-        pot = Potentiometer(name, chan, actions)
+
+        pot = Potentiometer(name, chan, actions, calibration)
         self.potentiometers.append(pot)
         logging.info(f"Added potentiometer {name} on AIN{analog_pin} (functional: {chan is not None})")
 
