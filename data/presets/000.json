@@ -149,14 +149,16 @@
         "Control.EXP_PEDAL_2": {
             "control_type": "ControlType.POTENTIOMETER",
             "actions": {
-                "PotEvent.CHANGE_VALUE": {
+                "PotEvent.STOP_CHANGING": {
                     "type": "info",
                     "info": "Exp-2 [__value__]", "line": 2
                 },
-                "PotEvent.ON_MIN": {
-                    "type": "info",
-                    "info": "Exp Pedal 2 Inactive", "line": 2
-                }
+                "PotEvent.ON_MIN": {"type": "empty"},
+                "PotEvent.ON_MAX": {"type": "empty"},
+                "PotEvent.LEAVE_MIN": {"type": "empty"},
+                "PotEvent.LEAVE_MAX": {"type": "empty"},
+                "PotEvent.CHANGE_DIRECTION": {"type": "empty"},
+                "PotEvent.CHANGE_VALUE": {"type": "empty"}
             }
         }
     }

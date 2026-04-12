@@ -1,4 +1,5 @@
 #TODO
+- Expression Pedals
 - PC up/down actions
 - CC grow/fall actions (value grow/fall/bounce consistantley when button pressed)
 - LFO action
@@ -11,7 +12,6 @@
 - Bluetooth MIDI
 - Network MIDI
 - Receive MIDI and route
-- Expression Pedals
 - TAP tempo
 - sync to external tempo
 - Python script action

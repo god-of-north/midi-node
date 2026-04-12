@@ -20,3 +20,4 @@ class InfoAction(Action):
 
         self.context.show_info(info, line=self.params["line"].value, clear_screen=self.params["clear_scr"].value, align=self.params["align"].value)
 
+
