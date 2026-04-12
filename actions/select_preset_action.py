@@ -9,6 +9,6 @@ class SelectPresetAction(Action):
         super().__init__(**kwargs)
         self.params["preset_number"] = ActionParam("preset_number", int, preset_number, default=0, options={"min_value":0, "max_value":100, "header":"Preset Number"})
 
-    def execute(self):
+    def execute(self, **kwargs):
         self.context.set_preset(self.params["preset_number"].value)
 

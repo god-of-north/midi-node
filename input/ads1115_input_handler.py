@@ -73,7 +73,7 @@ class Potentiometer:
         action = self.actions.get(event_type)
         if action:
             logging.debug(f"Firing PotEvent {event_type} for {self.name} with value {value}")
-            action.execute(value=value) # Assuming actions can take a 'value' parameter
+            action(value)
         else:
             logging.debug(f"No action defined for PotEvent {event_type} on {self.name}")
 

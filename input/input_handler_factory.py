@@ -7,6 +7,7 @@ class InputHandlerType(Enum):
     GPIO = auto()
     KEYBOARD = auto()
     ADS1115 = auto()
+    MOUSE = auto()
 
 class InputHandlerFactory:
     @staticmethod
@@ -20,3 +21,8 @@ class InputHandlerFactory:
         elif handler_type == InputHandlerType.ADS1115:
             from input.ads1115_input_handler import ADS1115InputHandler
             return ADS1115InputHandler(config)
+        elif handler_type == InputHandlerType.MOUSE:
+            from input.mouse_input_handler import MouseInputHandler
+            return MouseInputHandler(config)
+        else:
+            raise ValueError(f"Unknown InputHandlerType: {handler_type}")

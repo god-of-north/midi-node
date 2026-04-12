@@ -12,5 +12,5 @@ class MIDIAction(Action):
         self.params["output"] = ActionParam("output", MidiOutputType, output, default=MidiOutputType.UART, options={"header":"MIDI Type"})
         self.params["port_name"] = ActionParam("port_name", str, port_name, default="/dev/serial0", options={"header":"MIDI Port Name"}, custom_selector=CustomSelectorType.MIDI_OUTPUT)
 
-    def execute(self):
-        super().execute()
+    def execute(self, **kwargs):
+        super().execute(**kwargs)

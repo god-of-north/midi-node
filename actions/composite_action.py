@@ -22,9 +22,9 @@ class CompositeAction(Action):
                                                       "creator_func": self.create_action_by_type, 
                                                       "creator_items_func": self.get_creator_items})
 
-    def execute(self):
+    def execute(self, **kwargs):
         for action in self.params["actions"].value:
-            action.execute()
+            action.execute(**kwargs)
 
     def get_creator_items(self):
         return list(ActionRegistry.get_keys())

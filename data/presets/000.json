@@ -138,7 +138,7 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp Pedal 1 Active", "line": 2
+                    "info": "Exp-1 [__value__]", "line": 2
                 },
                 "PotEvent.ON_MIN": {
                     "type": "info",
@@ -151,7 +151,7 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp Pedal 2 Active", "line": 2
+                    "info": "Exp-2 [__value__]", "line": 2
                 },
                 "PotEvent.ON_MIN": {
                     "type": "info",

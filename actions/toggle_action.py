@@ -25,7 +25,7 @@ class ToggleAction(Action):
                                                       "creator_items_func": self.get_creator_items})
         self.params["slot"] = ActionParam("slot", int, slot, default=0, options={"min_value":0, "max_value":100, "header":"Toggle Slot"})
 
-    def execute(self):
+    def execute(self, **kwargs):
         actions = self.params["actions"].value
         next_action_index = self.toggle_slots.get(self.params["slot"].value, -1) + 1
         max_index = len(actions) - 1
@@ -33,7 +33,7 @@ class ToggleAction(Action):
             next_action_index = 0
         action = actions[next_action_index]
         self.toggle_slots[self.params["slot"].value] = next_action_index
-        action.execute()
+        action.execute(**kwargs)
 
     def get_creator_items(self):
         return list(ActionRegistry.get_keys())

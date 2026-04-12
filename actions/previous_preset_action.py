@@ -9,7 +9,7 @@ class PreviousPresetAction(Action):
         super().__init__(**kwargs)
         self.params["stop_at_start"] = ActionParam("stop_at_start", bool, stop_at_start, default=False, options={"header":"Stop at Start"})
 
-    def execute(self):
+    def execute(self, **kwargs):
         previous_preset_index = self.context.data.current_preset_index - 1
         if previous_preset_index < 0:
             if not self.params["stop_at_start"].value:

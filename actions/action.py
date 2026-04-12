@@ -82,7 +82,7 @@ class Action:
         if cls.TYPE != "base":
             ActionRegistry.register(cls.TYPE, cls, cls.TITLE)
 
-    def execute(self):
+    def execute(self, **kwargs):
         raise NotImplementedError
 
     def to_dict(self) -> dict:

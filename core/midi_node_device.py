@@ -6,6 +6,7 @@ from controls.control import Control
 from core.device_event import DeviceEvent, EventType
 from input.button_event import ButtonEvent
 from config import APP_MODE
+from input.pot_event import PotEvent
 from midi.midi_router import MidiRouter
 from storage.app_config import AppMode
 from .device_context import DeviceContext
@@ -62,6 +63,18 @@ class MidiNodeDevice:
             })
             input_handlers.append(keyboard_input_handler)
 
+            # Mouse Input Handler Setup
+            mouse_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.MOUSE, self.context.data.config)
+
+            mouse_input_handler.add_potentiometer("EXP_PEDAL_1", 0, actions={
+                PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.CHANGE_VALUE].execute(value=value))
+            })
+            mouse_input_handler.add_potentiometer("EXP_PEDAL_2", 1, actions={
+                PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.CHANGE_VALUE].execute(value=value))
+            })
+            input_handlers.append(mouse_input_handler)
+
+
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.CONSOLE)
             self.lcd.clear()
@@ -101,14 +114,15 @@ class MidiNodeDevice:
             input_handlers.append(gpio_input_handler)
 
             # ADS1115 Input Handler Setup
-            if self.context.data.config.ads1115_enabled:
-                ads1115_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.ADS1115, self.context.data.config)
-                
-                ads1115_input_handler.add_potentiometer("EXP_PEDAL_1", 0, 
-                    self.context.data.preset.controls[Control.EXP_PEDAL_1].actions)
-                ads1115_input_handler.add_potentiometer("EXP_PEDAL_2", 1,
-                    self.context.data.preset.controls[Control.EXP_PEDAL_2].actions)
-                input_handlers.append(ads1115_input_handler)
+            ads1115_input_handler = InputHandlerFactory.create_input_handler(InputHandlerType.ADS1115, self.context.data.config)
+
+            ads1115_input_handler.add_potentiometer("EXP_PEDAL_1", 0, actions={
+                PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_1].actions[PotEvent.CHANGE_VALUE].execute(value=value))
+            })
+            ads1115_input_handler.add_potentiometer("EXP_PEDAL_2", 1, actions={
+                PotEvent.CHANGE_VALUE: (lambda value, controls=self.context.data.preset.controls: controls[Control.EXP_PEDAL_2].actions[PotEvent.CHANGE_VALUE].execute(value=value))
+            })
+            input_handlers.append(ads1115_input_handler)
 
             # LCD Setup
             self.lcd = DisplayFactory.create_display(DisplayType.LCD2004)

@@ -12,6 +12,11 @@ class InfoAction(Action):
         self.params["clear_scr"] = ActionParam("clear_scr", bool, clear_scr, default=False, options={"header":"Clear Screen"})
         self.params["align"] = ActionParam("align", AlignText, align, default=False, options={"header":"Align"})
 
-    def execute(self):
-        self.context.show_info(self.params["info"].value, line=self.params["line"].value, clear_screen=self.params["clear_scr"].value, align=self.params["align"].value)
+    def execute(self, **kwargs):
+
+        info = self.params["info"].value
+        for key, value in kwargs.items():
+            info = info.replace(f"__{key}__", str(value))
+
+        self.context.show_info(info, line=self.params["line"].value, clear_screen=self.params["clear_scr"].value, align=self.params["align"].value)
 
