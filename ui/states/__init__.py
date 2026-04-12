@@ -22,6 +22,7 @@ from .menu_state import MenuState
 from .save_preset_state import SavePresetState
 from .settings_menu_state import SettingsMenuState
 from .string_creator_state import StringCreatorState
+from .save_bank_state import SaveBankState
 
 __all__ = [
     "ActionEditorState",
@@ -47,4 +48,5 @@ __all__ = [
     "SavePresetState",
     "SettingsMenuState",
     "StringCreatorState",
+    "SaveBankState"
 ]

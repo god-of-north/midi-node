@@ -16,7 +16,7 @@ class SavePresetState(StringCreatorState):
     def return_to_previous(self, deep: int = 1):
         preset_name = self._get_string().strip()
         self.transition_to(ListItemReplaceState, 
-                           items=[f"{p['name']}" for p in self.context.data.storage.get_preset_list()],
+                           items=[f"{p['name']}" for p in self.context.data.preset_list],
                            element_name=preset_name, 
                            current_index=self.context.data.current_preset_index, 
                            callback=self.save_preset,

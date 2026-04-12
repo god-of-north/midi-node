@@ -14,9 +14,12 @@ from storage.preset import Preset
 from controls.control import Control, ControlType
 from controls.control_model import ButtonControlModel, PotControlModel
 from input.button_event import ButtonEvent
+
+
 class DataContext:
     def __init__(self, device_context: 'DeviceContext'):
         from actions import InfoAction # Local import to break circular dependency
+
         self.storage = StorageManager("./data", context=device_context)
 
         self.config = self.storage.load_app_config()
@@ -34,6 +37,8 @@ class DataContext:
         else:
             self.bank = Bank(name="Default Bank", preset_numbers=[0])
             self.current_bank_index = 0
+
+        self._update_bank_preset_list()
 
         if self.current_preset_index is not None:
             self.preset = self.storage.load_preset(self.current_preset_index) 
@@ -82,7 +87,80 @@ class DataContext:
 
     def save_app_config(self):
         self.storage.save_app_config(self.config)
-    
+
+    def save_current_bank(self):
+        self.storage.save_bank(self.current_bank_index, self.bank)
+
+    def next_preset(self, stop_at_end: bool = False):
+        current_index_in_bank = 0
+        preset_list = self.get_bank_preset_list()
+        for i, preset in enumerate(preset_list):
+            if preset["number"] == self.current_preset_index:
+                current_index_in_bank = i
+                break
+
+        next_preset_index = current_index_in_bank + 1
+        if next_preset_index > len(preset_list) - 1:
+            if stop_at_end:
+                next_preset_index = len(preset_list) - 1
+            else:
+                next_preset_index = 0
+
+        next_preset = preset_list[next_preset_index]["number"]
+        self.set_preset(next_preset)
+
+    def previous_preset(self, stop_at_start: bool = False):
+        current_index_in_bank = 0
+        preset_list = self.get_bank_preset_list()
+        for i, preset in enumerate(preset_list):
+            if preset["number"] == self.current_preset_index:
+                current_index_in_bank = i
+                break
+
+        previous_preset_index = current_index_in_bank - 1
+        if previous_preset_index < 0:
+            if stop_at_start:
+                previous_preset_index = 0
+            else:
+                previous_preset_index = len(preset_list) - 1
+
+        previous_preset = preset_list[previous_preset_index]["number"]
+        self.set_preset(previous_preset)
+
+    def set_bank(self, bank_number:int):
+        if self.current_bank_index == bank_number:
+            logging.info(f"Bank {bank_number} is already active.")
+            return
+
+        self.bank = self.storage.load_bank(bank_number)
+        self.storage.save_current_bank_index(bank_number)
+        self.current_bank_index = bank_number
+        self._update_bank_preset_list()
+
+    def next_bank(self, stop_at_end: bool = False):
+        next_bank = self.current_bank_index + 1
+        if next_bank >= len(self.bank_list):
+            if stop_at_end:
+                next_bank = len(self.bank_list) - 1
+            else:
+                next_bank = 0
+        self.set_bank(next_bank)
+
+    def previous_bank(self, stop_at_start: bool = False):
+        previous_bank = self.current_bank_index - 1
+        if previous_bank < 0:
+            if stop_at_start:
+                previous_bank = 0
+            else:
+                previous_bank = len(self.bank_list) - 1
+        self.set_bank(previous_bank)
+
+    def get_bank_preset_list(self) -> list[Preset]:
+        return self.bank_preset_list
+
+    def _update_bank_preset_list(self):
+        self.bank_preset_list = [preset for preset in self.preset_list if preset["number"] in self.bank.preset_numbers]
+
     def _default_app_config(self) -> 'AppConfig':
         from storage.app_config import AppConfig
         return AppConfig()
@@ -150,3 +228,53 @@ class DeviceContext:
     def set_preset(self, preset_number:int):
         """Set the current preset by its number."""
         self.data.set_preset(preset_number)
+    
+    def next_preset(self, stop_at_end: bool = False):
+        """Go to the next preset, optionally stopping at the end of the list."""
+        self.data.next_preset(stop_at_end=stop_at_end)
+
+    def previous_preset(self, stop_at_start: bool = False):
+        """Go to the previous preset, optionally stopping at the start of the list."""
+        self.data.previous_preset(stop_at_start=stop_at_start)
+
+    def set_bank(self, bank_number:int):
+        """Set the current bank by its number."""
+        self.data.set_bank(bank_number)
+
+    def next_bank(self, stop_at_end: bool = False):
+        """Go to the next bank, optionally stopping at the end of the list."""
+        self.data.next_bank(stop_at_end=stop_at_end)
+
+    def previous_bank(self, stop_at_start: bool = False):
+        """Go to the previous bank, optionally stopping at the start of the list."""
+        self.data.previous_bank(stop_at_start=stop_at_start)
+
+    def get_bank_index(self) -> int:
+        """Get the current bank number."""
+        return self.data.current_bank_index
+    
+    def get_preset_index(self) -> int:
+        """Get the current preset number."""
+        return self.data.current_preset_index
+    
+    def get_current_bank(self) -> Bank:
+        """Get the current bank object."""
+        return self.data.bank
+    
+    def get_current_preset(self) -> Preset:
+        """Get the current preset object."""
+        return self.data.preset
+    
+    def save_current_preset(self):
+        """Save the current preset to storage."""
+        self.data.save_current_preset()
+
+    def save_current_bank(self):
+        """Save the current bank to storage."""
+        self.data.save_current_bank()
+
+    def get_preset_list(self, all: bool = True) -> list[Preset]:
+        """Get the list of all presets."""
+        if all:
+            return self.data.preset_list
+        return self.data.get_bank_preset_list()
