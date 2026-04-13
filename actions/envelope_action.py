@@ -155,10 +155,10 @@ class EnvelopeAction(MIDIAction):
         min_value: int = 0,
         max_value: int = 127,
         sustain_value: int = 64,
-        attack_time: int = 0,
+        attack_time: int = 200,
         max_time: int = 0,
-        decay_time: int = 0,
-        release_time: int = 0,
+        decay_time: int = 500,
+        release_time: int = 200,
         output: MidiOutputType = MidiOutputType.UART,
         port_name: str = "/dev/serial0",
         channel: int = 1,
@@ -185,10 +185,10 @@ class EnvelopeAction(MIDIAction):
         self.params["max_value"] = ActionParam("max_value", int, max_value, default=127, options={"min_value": 0, "max_value": 127, "header": "Max Value"})
         self.params["sustain_value"] = ActionParam("sustain_value", int, sustain_value, default=64, options={"min_value": 0, "max_value": 127, "header": "Sustain Value"})
 
-        self.params["attack_time"] = ActionParam("attack_time", int, attack_time, default=0, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Attack (ms)"})
+        self.params["attack_time"] = ActionParam("attack_time", int, attack_time, default=200, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Attack (ms)"})
         self.params["max_time"] = ActionParam("max_time", int, max_time, default=0, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Max Hold (ms)"})
-        self.params["decay_time"] = ActionParam("decay_time", int, decay_time, default=0, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Decay (ms)"})
-        self.params["release_time"] = ActionParam("release_time", int, release_time, default=0, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Release (ms)"})
+        self.params["decay_time"] = ActionParam("decay_time", int, decay_time, default=500, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Decay (ms)"})
+        self.params["release_time"] = ActionParam("release_time", int, release_time, default=200, options={"min_value": 0, "max_value": 60000, "step": 10, "header": "Release (ms)"})
 
     @classmethod
     def _stop_slot_locked(cls, slot: int):

@@ -5,6 +5,10 @@ from .menu_state import MenuState
 from .control_settings_menu_state import ControlSettingsMenuState
 from .save_preset_state import SavePresetState
 from .error_state import ErrorState
+from .preset_action_selector_state import PresetActionSelectorState
+from .preset_action_settings_state import PresetActionSettingsState
+from .bank_action_selector_state import BankActionSelectorState
+from .bank_action_settings_state import BankActionSettingsState
 from core.device_event import EventType
 from controls import Control
 
@@ -23,6 +27,10 @@ class SettingsMenuState(MenuState):
                 "param": f'{self.context.data.current_bank_index:02d}:{self.context.data.bank.name}',
                 "callback": self._select_bank_callback}},
             "Save Preset": {"class": SavePresetState},
+            "Preset [Enter]": {"class": PresetActionSettingsState, "args": {"is_enter": True}},
+            "Preset [Exit]": {"class": PresetActionSettingsState, "args": {"is_enter": False}},
+            "Bank [Enter]": {"class": BankActionSettingsState, "args": {"is_enter": True}},
+            "Bank [Exit]": {"class": BankActionSettingsState, "args": {"is_enter": False}},
             "Save Bank": {"class": SaveBankState},
             "Setup Button 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_1}},
             "Setup Button 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_2}},

@@ -1,6 +1,4 @@
 #TODO
-- Configure: Actions on PresetEnter, PresetExit
-- Configure: Actions on BankEnter, BankExit
 - Delayed action
 - Tremolo/Slicer action
 - WiFi settings (connect/disconnect)

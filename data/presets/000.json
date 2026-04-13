@@ -6,31 +6,52 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 1 Pressed", "line": 2
+                    "info": "Button 1 Pressed",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 1 Released", "line": 2
+                    "info": "Button 1 Released",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 1 TAP", "line": 2
+                    "info": "Button 1 TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 1 DOUBLE_TAP", "line": 2
+                    "info": "Button 1 DOUBLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 1 TRIPLE_TAP", "line": 2
+                    "info": "Button 1 TRIPLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 1 LONG_PRESS", "line": 2
+                    "info": "Button 1 LONG_PRESS",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 1 LP_RELEASE", "line": 2
+                    "info": "Button 1 LP_RELEASE",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 }
             }
         },
@@ -39,31 +60,52 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 2 Pressed", "line": 2
+                    "info": "Button 2 Pressed",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 2 Released", "line": 2
+                    "info": "Button 2 Released",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 2 TAP", "line": 2
+                    "info": "Button 2 TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 2 DOUBLE_TAP", "line": 2
+                    "info": "Button 2 DOUBLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 2 TRIPLE_TAP", "line": 2
+                    "info": "Button 2 TRIPLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 2 LONG_PRESS", "line": 2
+                    "info": "Button 2 LONG_PRESS",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 2 LP_RELEASE", "line": 2
+                    "info": "Button 2 LP_RELEASE",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 }
             }
         },
@@ -72,31 +114,52 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 3 Pressed", "line": 2
+                    "info": "Button 3 Pressed",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 3 Released", "line": 2
+                    "info": "Button 3 Released",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 3 TAP", "line": 2
+                    "info": "Button 3 TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 3 DOUBLE_TAP", "line": 2
+                    "info": "Button 3 DOUBLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 3 TRIPLE_TAP", "line": 2
+                    "info": "Button 3 TRIPLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 3 LONG_PRESS", "line": 2
+                    "info": "Button 3 LONG_PRESS",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 3 LP_RELEASE", "line": 2
+                    "info": "Button 3 LP_RELEASE",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 }
             }
         },
@@ -105,31 +168,52 @@
             "actions": {
                 "ButtonEvent.PRESS": {
                     "type": "info",
-                    "info": "Button 4 Pressed", "line": 2
+                    "info": "Button 4 Pressed",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
-                    "info": "Button 4 Released", "line": 2
+                    "info": "Button 4 Released",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
-                    "info": "Button 4 TAP", "line": 2
+                    "info": "Button 4 TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
-                    "info": "Button 4 DOUBLE_TAP", "line": 2
+                    "info": "Button 4 DOUBLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.TRIPLE_TAP": {
                     "type": "info",
-                    "info": "Button 4 TRIPLE_TAP", "line": 2
+                    "info": "Button 4 TRIPLE_TAP",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS": {
                     "type": "info",
-                    "info": "Button 4 LONG_PRESS", "line": 2
+                    "info": "Button 4 LONG_PRESS",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
                 "ButtonEvent.LONG_PRESS_RELEASE": {
                     "type": "info",
-                    "info": "Button 4 LP_RELEASE", "line": 2
+                    "info": "Button 4 LP_RELEASE",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 }
             }
         },
@@ -138,14 +222,29 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp-1 [__value__]", "line": 2
+                    "info": "Exp-1 [__value__]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "PotEvent.ON_MIN": {"type": "empty"},
-                "PotEvent.ON_MAX": {"type": "empty"},
-                "PotEvent.LEAVE_MIN": {"type": "empty"},
-                "PotEvent.LEAVE_MAX": {"type": "empty"},
-                "PotEvent.CHANGE_DIRECTION": {"type": "empty"},
-                "PotEvent.STOP_CHANGING": {"type": "empty"}
+                "PotEvent.ON_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.ON_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.CHANGE_DIRECTION": {
+                    "type": "empty"
+                },
+                "PotEvent.STOP_CHANGING": {
+                    "type": "empty"
+                }
             }
         },
         "Control.EXP_PEDAL_2": {
@@ -153,15 +252,40 @@
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
                     "type": "info",
-                    "info": "Exp-2 [__value__]", "line": 2
+                    "info": "Exp-2 [__value__]",
+                    "line": 2,
+                    "clear_scr": false,
+                    "align": "CENTER"
                 },
-                "PotEvent.ON_MIN": {"type": "empty"},
-                "PotEvent.ON_MAX": {"type": "empty"},
-                "PotEvent.LEAVE_MIN": {"type": "empty"},
-                "PotEvent.LEAVE_MAX": {"type": "empty"},
-                "PotEvent.CHANGE_DIRECTION": {"type": "empty"},
-                "PotEvent.STOP_CHANGING": {"type": "empty"}
+                "PotEvent.ON_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.ON_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MIN": {
+                    "type": "empty"
+                },
+                "PotEvent.LEAVE_MAX": {
+                    "type": "empty"
+                },
+                "PotEvent.CHANGE_DIRECTION": {
+                    "type": "empty"
+                },
+                "PotEvent.STOP_CHANGING": {
+                    "type": "empty"
+                }
             }
         }
+    },
+    "enter_action": {
+        "type": "info",
+        "info": "P ENTER",
+        "line": 3,
+        "clear_scr": false,
+        "align": "CENTER"
+    },
+    "exit_action": {
+        "type": "empty"
     }
 }

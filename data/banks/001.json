@@ -1,6 +1,17 @@
 {
     "name": "Second Bank",
     "presets": [
-        1,2
-    ]
+        1,
+        2
+    ],
+    "enter_action": {
+        "type": "info",
+        "info": "BANK",
+        "line": 4,
+        "clear_scr": false,
+        "align": "CENTER"
+    },
+    "exit_action": {
+        "type": "empty"
+    }
 }
