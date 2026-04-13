@@ -1,4 +1,8 @@
 #TODO
+- MIDI input [forwarding (fanout, direct, route channels)]
+- MIDI input [mute, filter]
+- MIDI input [external button (press, release)]
+- MIDI input [map to action]
 - Delayed action
 - Tremolo/Slicer action
 - WiFi settings (connect/disconnect)

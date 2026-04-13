@@ -1,7 +1,8 @@
 import subprocess
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
+import logging
 
 @dataclass
 class WifiConnectionInfo:
@@ -22,6 +23,8 @@ class WifiManager:
             )
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
+            # Catching errors silently for logic
+            logging.error(f"Command '{' '.join(command)}' failed: {e.stderr.strip()}")
             return e.stderr.strip()
 
     def is_connected(self) -> bool:
@@ -45,6 +48,13 @@ class WifiManager:
                 )
         return None
 
+    def list_ssid(self) -> List[str]:
+        """Returns a unique list of available SSIDs in range."""
+        # '--rescan yes' ensures we don't get stale cached results
+        output = self._run_command(["nmcli", "-t", "-f", "SSID", "dev", "wifi", "list", "--rescan", "yes"])
+        ssids = {line for line in output.split('\n') if line}
+        return sorted(list(ssids))
+
     def connect(self, ssid: str, password: str) -> str:
         """Connects to a new WiFi network and saves the profile for auto-reconnect."""
         # This command creates a persistent profile that the OS will manage
@@ -60,7 +70,25 @@ class WifiManager:
         """Disables the WiFi interface."""
         return self._run_command(["nmcli", "device", "disconnect", self.interface])
 
-# --- Example Usage ---
+    def hotspot(self, ssid: str, password: str):
+        """
+        Creates/starts a Wi-Fi Hotspot. 
+        Note: This will disconnect existing Wi-Fi connections.
+        """
+        # 1. Clean up any existing hotspot profile to avoid naming conflicts
+        self._run_command(["nmcli", "connection", "delete", "Hotspot"])
+        
+        # 2. Use the specialized hotspot command for easy setup
+        # This automatically handles DHCP and NAT for the interface
+        cmd = [
+            "nmcli", "device", "wifi", "hotspot",
+            "ifname", self.interface,
+            "con-name", "Hotspot",
+            "ssid", ssid,
+            "password", password
+        ]
+        return self._run_command(cmd)
+
 if __name__ == "__main__":
     wifi = WifiManager()
     
@@ -69,7 +97,10 @@ if __name__ == "__main__":
     active = wifi.active_connection()
     if active:
         print(f"Current SSID: {active.ssid} (Signal: {active.signal_strength})")
-    
+
+    print("Scanning for networks...")
+    print(f"Available SSIDs: {wifi.list_ssid()}")
+
     # To connect to a new network:
     print(wifi.connect("Mordor", "88793788"))
 
