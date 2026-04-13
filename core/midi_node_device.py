@@ -8,11 +8,11 @@ from core.device_event import DeviceEvent, EventType
 from input.button_event import ButtonEvent
 from config import APP_MODE
 from input.pot_event import PotEvent
-from midi.midi_router import MidiRouter
 from storage.app_config import AppMode
 from .device_context import DeviceContext
 from .threading.input_manager import InputManager
 from .threading.ui_manager import UIManager
+from .threading.midi_manager import MIDIManager
 from ui.states.home_state import HomeState
 from input import InputHandlerFactory, InputHandlerType
 from display import DisplayFactory, DisplayType
@@ -24,9 +24,11 @@ class MidiNodeDevice:
         self.ui_queue = queue.SimpleQueue()
         self.shutdown_event = threading.Event()
 
-        self.midi = MidiRouter()
+        # MIDI Manager (handles MIDI I/O via MidiRouter)
+        self.midi_manager = MIDIManager(self.shutdown_event)
 
-        self.context = DeviceContext(self.event_queue, self.ui_queue, self.midi)
+        # Device context now works with the MIDIManager directly
+        self.context = DeviceContext(self.event_queue, self.ui_queue, self.midi_manager)
 
         input_handlers = []
 
@@ -153,9 +155,10 @@ class MidiNodeDevice:
             self.lcd = DisplayFactory.create_display(DisplayType.LCD2004)
             self.lcd.clear()
 
-        # Input Manager now takes a list of handlers
+        # Input / UI / MIDI managers
         self.input_thread = InputManager(self.event_queue, self.shutdown_event, input_handlers=input_handlers, config=self.context.data.config)
         self.ui_thread = UIManager(self.ui_queue, self.lcd, self.shutdown_event)
+        self.midi_thread = self.midi_manager
     
         self.context.state.push_state(HomeState(self.context))
 
@@ -165,6 +168,7 @@ class MidiNodeDevice:
     def start(self):
         self.input_thread.start()
         self.ui_thread.start()
+        self.midi_thread.start()
         
         try:
             self._main_loop()
@@ -189,4 +193,5 @@ class MidiNodeDevice:
         self.shutdown_event.set()
         self.input_thread.join()
         self.ui_thread.join()
+        self.midi_thread.join()
         logging.info("MIDI Node Stopped Cleanly")

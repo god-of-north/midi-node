@@ -5,7 +5,6 @@ import logging
 from core.align_text import AlignText
 from input.pot_event import PotEvent
 from midi.midi_output_type import MidiOutputType
-from midi.midi_router import MidiRouter
 from storage.app_config import AppMode
 from .device_event import DeviceEvent, EventType
 from storage.storage_manager import StorageManager
@@ -14,6 +13,7 @@ from storage.preset import Preset
 from controls.control import Control, ControlType
 from controls.control_model import ButtonControlModel, PotControlModel
 from input.button_event import ButtonEvent
+from core.threading.midi_manager import MIDIManager
 
 
 class DataContext:
@@ -206,12 +206,12 @@ class StateContext:
         self.current_state.on_enter()
 
 class DeviceContext:
-    def __init__(self, event_queue: queue.Queue, ui_queue: queue.Queue, midi_router: MidiRouter):
+    def __init__(self, event_queue: queue.Queue, ui_queue: queue.Queue, midi_manager: MIDIManager):
         self.data = DataContext(self)
         self.ui = UIContext(ui_queue)
         self.state = StateContext(self)
         self.event_queue = event_queue
-        self.midi_router = midi_router
+        self.midi_manager = midi_manager
 
     def show_info(self, info: str, line: int = 1, clear_screen: bool = False, align:AlignText = AlignText.CENTER):
         """Display an informational message"""
@@ -219,15 +219,15 @@ class DeviceContext:
 
     def send_cc(self, output: MidiOutputType, name: str, channel:int, cc:int, value:int):
         """Send a MIDI CC message to the specified output and channel."""
-        self.midi_router.send_cc(output, name, channel, cc, value)
+        self.midi_manager.send_cc(output, name, channel, cc, value)
 
     def send_pc(self, output: MidiOutputType, name: str, channel:int, program:int):
         """Send a MIDI Program Change message to the specified output and channel."""
-        self.midi_router.send_pc(output, name, channel, program)
+        self.midi_manager.send_pc(output, name, channel, program)
 
     def list_midi_outputs(self, output_type: MidiOutputType) -> list[str]:
         """List available MIDI outputs of the specified type."""
-        return self.midi_router.list_outputs(output_type)
+        return self.midi_manager.list_outputs(output_type)
     
     def set_preset(self, preset_number:int):
         """Set the current preset by its number."""

@@ -56,7 +56,7 @@ class LFOGenerator(Thread):
     def run(self):
         start_time = time.time()
         # Initial send
-        self.context.midi_router.send_cc(self.channel, self.cc, int(self._current_value), self.output, self.port_name)
+        self.context.send_cc(self.output, self.port_name, self.channel, self.cc, int(self._current_value))
 
         while not self._stop_event.is_set():
             elapsed_time = time.time() - start_time
@@ -92,7 +92,7 @@ class LFOGenerator(Thread):
             
             # Clamp value to MIDI range (0-127) and send
             midi_value = max(0, min(127, int(self._current_value)))
-            self.context.midi_router.send_cc(self.channel, self.cc, midi_value, self.output, self.port_name)
+            self.context.send_cc(self.output, self.port_name, self.channel, self.cc, midi_value)
             # self.context.show_info(f"LFO CC {self.cc}:{midi_value}")
 
             # Wait for next interval
@@ -196,9 +196,9 @@ class LFOAction(MIDIAction):
                 LFOAction._lfo_generators[slot].join() # TODO: Should I wait for thread to finish?
                 
                 # Send the stop value
-                self.context.midi_router.send_cc(channel, cc, stop_value, output, port_name)
+                self.context.send_cc(output, port_name, channel, cc, stop_value)
                 del LFOAction._lfo_generators[slot]
             else:
                 logging.warning(f"No active LFO found in slot {slot} to stop.")
                 # Even if no LFO is running, send the stop value as a failsafe
-                self.context.midi_router.send_cc(channel, cc, stop_value, output, port_name)
+                self.context.send_cc(output, port_name, channel, cc, stop_value)
