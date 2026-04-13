@@ -21,7 +21,7 @@ python3 -m venv test-env
 source test-env/bin/activate
 
 # install deps
-pip3 install RPLCD smbus2 gpiozero gpiod rpi-lgpio pyserial mido adafruit-circuitpython-ads1x15
+pip3 install RPLCD smbus2 gpiozero gpiod rpi-lgpio pyserial mido adafruit-circuitpython-ads1x15 python-rtmidi
 
 
 sudo apt install python3-smbus i2c-tools -y
