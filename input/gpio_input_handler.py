@@ -1,6 +1,6 @@
 import logging
 import gpiod
-from gpiod.line import Direction, Edge, Bias, Value
+from gpiod.line import Direction, Edge, Bias
 from gpiod import EdgeEvent  # Added for correct event type comparison
 from datetime import timedelta
 import time
@@ -14,34 +14,41 @@ class RotaryEncoder:
     def __init__(self, clk_pin, dt_pin, on_rotate):
         self.clk_pin = clk_pin
         self.dt_pin = dt_pin
-        self.on_rotate = on_rotate 
+        self.on_rotate = on_rotate
+        self._phase = "idle"  # idle | one_high | both_high
+        self._first_rise_pin = None
+        self._falls_while_high = 0
 
-        self.last_clk_falling_time = 0
-        self.last_dt_value = 0
-        self.rotation_threshold = 0.1
-
-    def process(self, event, chip_request):
-
-        dt_val = chip_request.get_value(self.dt_pin)
-
-        # print(f"CLK event: {event.event_type}, DT value: {dt_val}, Time: {time.time():.3f}")
-
-        if event.event_type == EdgeEvent.Type.FALLING_EDGE:
-            self.last_clk_falling_time = time.time()
-            self.last_dt_value = dt_val
-
-            # print(f"CLK falling edge detected. Updated last_clk_rising_time: {self.last_clk_falling_time:.3f}, last_dt_value: {self.last_dt_value}")
-
+    def process(self, event, _chip_request):
+        pin = event.line_offset
+        if pin not in (self.clk_pin, self.dt_pin):
             return
 
-        if self.last_clk_falling_time == 0 or (time.time() - self.last_clk_falling_time) > self.rotation_threshold or dt_val == self.last_dt_value:
+        et = event.event_type
 
-            # print(f"Ignoring CLK rising edge. Time since last falling: {time.time() - self.last_clk_falling_time:.3f}s, DT value: {dt_val}, Last DT value: {self.last_dt_value}")
-
-            return
-
-        direction = 1 if dt_val == Value.ACTIVE else -1
-        self.on_rotate(direction)
+        if self._phase == "idle":
+            if et == EdgeEvent.Type.RISING_EDGE:
+                self._first_rise_pin = pin
+                self._phase = "one_high"
+        elif self._phase == "one_high":
+            if et == EdgeEvent.Type.RISING_EDGE and pin != self._first_rise_pin:
+                first = self._first_rise_pin
+                self._first_rise_pin = None
+                if first == self.clk_pin and pin == self.dt_pin:
+                    self.on_rotate(1)
+                elif first == self.dt_pin and pin == self.clk_pin:
+                    self.on_rotate(-1)
+                self._phase = "both_high"
+                self._falls_while_high = 0
+            elif et == EdgeEvent.Type.FALLING_EDGE and pin == self._first_rise_pin:
+                self._phase = "idle"
+                self._first_rise_pin = None
+        elif self._phase == "both_high":
+            if et == EdgeEvent.Type.FALLING_EDGE:
+                self._falls_while_high += 1
+                if self._falls_while_high >= 2:
+                    self._phase = "idle"
+                    self._falls_while_high = 0
 
 class GPIOInputHandler(InputHandler):
     def __init__(self, config):
@@ -67,8 +74,11 @@ class GPIOInputHandler(InputHandler):
     def add_encoder(self, clk_pin, dt_pin, callback):
         encoder = RotaryEncoder(clk_pin, dt_pin, callback)
         self.encoders[clk_pin] = encoder
-        if clk_pin not in self.all_pins: self.all_pins.append(clk_pin)
-        if dt_pin not in self.all_pins: self.all_pins.append(dt_pin)
+        self.encoders[dt_pin] = encoder
+        if clk_pin not in self.all_pins:
+            self.all_pins.append(clk_pin)
+        if dt_pin not in self.all_pins:
+            self.all_pins.append(dt_pin)
 
     def setup_gpio(self):
         """Initializes the gpiod lines after all buttons and encoders are added."""
