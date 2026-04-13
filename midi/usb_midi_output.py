@@ -4,7 +4,7 @@ from midi.midi_output import MidiOutput
 
 class UsbMidiOutput(MidiOutput):
     def __init__(self, port_name):
-        self.port = mido.open_output(port_name)
+        self.port = mido.open_ioport(port_name)
 
     def send_cc(self, channel, cc, value):
         self.port.send(mido.Message("control_change",
@@ -16,12 +16,20 @@ class UsbMidiOutput(MidiOutput):
         self.port.send(mido.Message("program_change",
                                     channel=channel,
                                     program=program))
-
+    
+    @staticmethod
     def list_usb_midi_devices():
         return mido.get_output_names()
 
     def close(self):
         self.port.close()
+
+    def __del__(self):
+        self.close()
+
+    def read_message(self) -> mido.Message | None:
+        return self.in_port.poll()
+
 
 if __name__ == "__main__":
 

@@ -287,5 +287,6 @@
     },
     "exit_action": {
         "type": "empty"
-    }
+    },
+    "input_midi_rules": []
 }

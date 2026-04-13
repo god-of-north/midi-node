@@ -2,6 +2,7 @@ import logging
 import threading
 import time
 
+from midi.midi_input_router import MidiInputRouter
 from midi.midi_router import MidiRouter
 from midi.midi_output_type import MidiOutputType
 
@@ -29,6 +30,9 @@ class MIDIManager(threading.Thread):
         try:
             while not self.shutdown.is_set():
                 # future MIDI input background tasks.
+
+                # MidiInputRouter.process_incoming() # TODO: implement this method to handle incoming MIDI messages and route them accordingly.
+
                 time.sleep(0.01)
         finally:
             self.close()

@@ -89,6 +89,18 @@ class WifiManager:
         ]
         return self._run_command(cmd)
 
+    def get_ip_address(self) -> Optional[str]:
+        """Returns the current IPv4 address of the interface."""
+        # Queries NetworkManager for the specific IP4 address field
+        cmd = ["nmcli", "-g", "IP4.ADDRESS", "device", "show", self.interface]
+        output = self._run_command(cmd)
+        
+        # Output is usually in CIDR format: '192.168.1.50/24'
+        if output:
+            return output.split('/')[0]
+        return None        
+
+
 if __name__ == "__main__":
     wifi = WifiManager()
     
