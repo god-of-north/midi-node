@@ -9,6 +9,7 @@ from .preset_action_selector_state import PresetActionSelectorState
 from .preset_action_settings_state import PresetActionSettingsState
 from .bank_action_selector_state import BankActionSelectorState
 from .bank_action_settings_state import BankActionSettingsState
+from .shutdown_state import ShutdownState
 from core.device_event import EventType
 from controls import Control
 
@@ -39,6 +40,7 @@ class SettingsMenuState(MenuState):
             "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
             "System Config": {"class": SystemConfigState},
+            "Shutdown": {"class": ShutdownState},
             "Back to Live Mode": None
         }
         self.items = list(self.transitions.keys())

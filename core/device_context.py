@@ -1,12 +1,16 @@
 from __future__ import annotations
-import queue
 import logging
+import queue
+import subprocess
+import sys
 
 from core.align_text import AlignText
 from input.pot_event import PotEvent
 from midi.midi_output_type import MidiOutputType
 from storage.app_config import AppMode
 from .device_event import DeviceEvent, EventType
+from config import APP_MODE
+from storage.app_config import AppMode
 from storage.storage_manager import StorageManager
 from storage.bank import Bank
 from storage.preset import Preset
@@ -282,3 +286,15 @@ class DeviceContext:
         if all:
             return self.data.preset_list
         return self.data.get_bank_preset_list()
+
+    def shutdown_device(self) -> None:
+        """Halt the host immediately (Raspberry Pi / Linux). No-op in simulation mode."""
+        if APP_MODE == AppMode.SIMULATION:
+            logging.info("shutdown_device: skipped (simulation mode)")
+            return
+        if sys.platform == "win32":
+            return
+        try:
+            subprocess.run(["/sbin/shutdown", "-h", "now"], check=False)
+        except OSError as e:
+            logging.warning("shutdown_device failed: %s", e)
