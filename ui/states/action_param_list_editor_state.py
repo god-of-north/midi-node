@@ -16,8 +16,22 @@ class ActionParamListEditorState(MenuState):
     def on_enter(self):
         from .action_editor_state import ActionEditorState
         self.transitions = {}
+        item_editor_cls = self.param.options.get("item_editor_state_class")
+        if callable(item_editor_cls):
+            item_editor_cls = item_editor_cls()
         for idx, item in enumerate(self.param.value):
-            self.transitions[f"{idx+1}:{item.__str__()}"] = {"class": ActionEditorState, "args": {"action": item, "delete_callback": lambda i=item: self.param.value.remove(i)}}
+            delete_cb = lambda i=item: self.param.value.remove(i)
+            label = f"{idx+1}:{item!s}"
+            if item_editor_cls:
+                self.transitions[label] = {
+                    "class": item_editor_cls,
+                    "args": {"item": item, "delete_callback": delete_cb},
+                }
+            else:
+                self.transitions[label] = {
+                    "class": ActionEditorState,
+                    "args": {"action": item, "delete_callback": delete_cb},
+                }
         self.transitions["Add Item"] = {"class": ListItemCreatorState, "args": {"items": self.creator_items, "item_add_func": self._add_item}}
         self.transitions["Back"] = None
         self.items = list(self.transitions.keys())

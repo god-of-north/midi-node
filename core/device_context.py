@@ -18,6 +18,7 @@ from controls.control import Control, ControlType
 from controls.control_model import ButtonControlModel, PotControlModel
 from input.button_event import ButtonEvent
 from core.threading.midi_manager import MIDIManager
+from wifi import WifiManager
 
 
 class DataContext:
@@ -35,6 +36,7 @@ class DataContext:
         self.preset_list = self.storage.get_preset_list()
         self.current_preset_index = self.storage.load_current_preset_index()
         self.max_preset_index = len(self.preset_list) - 1
+        self.shift_flags: dict[int, bool] = {}
 
         if self.current_bank_index is not None:
             self.bank = self.storage.load_bank(self.current_bank_index) 
@@ -98,6 +100,12 @@ class DataContext:
 
     def save_current_bank(self):
         self.storage.save_bank(self.current_bank_index, self.bank)
+
+    def set_shift_flag(self, shift_number: int, active: bool) -> None:
+        self.shift_flags[shift_number] = active
+
+    def get_shift_flag(self, shift_number: int) -> bool:
+        return self.shift_flags.get(shift_number, False)
 
     def next_preset(self, stop_at_end: bool = False):
         current_index_in_bank = 0
@@ -216,6 +224,7 @@ class DeviceContext:
         self.state = StateContext(self)
         self.event_queue = event_queue
         self.midi_manager = midi_manager
+        self.wifi = WifiManager()
 
     def show_info(self, info: str, line: int = 1, clear_screen: bool = False, align:AlignText = AlignText.CENTER):
         """Display an informational message"""
@@ -287,6 +296,12 @@ class DeviceContext:
             return self.data.preset_list
         return self.data.get_bank_preset_list()
 
+    def set_shift_flag(self, shift_number: int, active: bool) -> None:
+        self.data.set_shift_flag(shift_number, active)
+
+    def get_shift_flag(self, shift_number: int) -> bool:
+        return self.data.get_shift_flag(shift_number)
+
     def shutdown_device(self) -> None:
         """Halt the host immediately (Raspberry Pi / Linux). No-op in simulation mode."""
         if APP_MODE == AppMode.SIMULATION:
@@ -295,6 +310,8 @@ class DeviceContext:
         if sys.platform == "win32":
             return
         try:
-            subprocess.run(["/sbin/shutdown", "-h", "now"], check=False)
+            import os
+            os.system('sudo systemctl poweroff')
+            # subprocess.run(["/sbin/shutdown", "-h", "now"], check=False)
         except OSError as e:
             logging.warning("shutdown_device failed: %s", e)

@@ -5,6 +5,8 @@ class Control(Enum):
     BUTTON_2 = auto()
     BUTTON_3 = auto()
     BUTTON_4 = auto()
+    BUTTON_5 = auto()
+    BUTTON_6 = auto()
     EXP_PEDAL_1 = auto()
     EXP_PEDAL_2 = auto()
 

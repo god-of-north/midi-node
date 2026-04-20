@@ -41,6 +41,8 @@ class MidiNodeDevice:
                 Control.BUTTON_2: '2',
                 Control.BUTTON_3: '3',
                 Control.BUTTON_4: '4',
+                Control.BUTTON_5: '5',
+                Control.BUTTON_6: '6',
             }
 
             for control, button in default_key_map.items():
@@ -113,6 +115,8 @@ class MidiNodeDevice:
                 Control.BUTTON_2: 13, # GPIO_13
                 Control.BUTTON_3: 19, # GPIO_19
                 Control.BUTTON_4: 26, # GPIO_26
+                Control.BUTTON_5: 21, # GPIO_21
+                Control.BUTTON_6: 20, # GPIO_20
             }
 
             for control, button in default_key_map.items():

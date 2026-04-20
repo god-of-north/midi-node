@@ -1,3 +1,4 @@
+import inspect
 from enum import Enum
 
 from actions.action import ActionParam
@@ -67,6 +68,11 @@ class PresetActionSettingsState(MenuState):
             elif issubclass(param.param_type, Enum):
                 display_value = param.value.name if param.value else "None"
                 transition = {"class": ActionParamEnumSelectorState, "args": {"param": param}}
+            elif inspect.isclass(param.param_type) and issubclass(param.param_type, Action):
+                from .nested_action_editor_state import NestedActionEditorState
+
+                display_value = getattr(param.value, "TITLE", str(param.value))
+                transition = {"class": NestedActionEditorState, "args": {"param": param}}
             elif param.param_type == list:
                 display_value = "[]"
                 transition = {"class": ActionParamListEditorState, "args": {"param": param}}

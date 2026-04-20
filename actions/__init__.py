@@ -15,6 +15,8 @@ from .envelope_action import EnvelopeAction, EnvelopeActionType
 from .select_bank_action import SelectBankAction
 from .next_bank_action import NextBankAction
 from .previous_bank_action import PreviousBankAction
+from .shift_action import ShiftAction
+from .shift_selector_action import ShiftBranch, ShiftSelectorAction
 
 __all__ = [
     "Action",
@@ -43,4 +45,7 @@ __all__ = [
     "LFOActionWaveform",
     "EnvelopeAction",
     "EnvelopeActionType",
+    "ShiftAction",
+    "ShiftBranch",
+    "ShiftSelectorAction",
 ]

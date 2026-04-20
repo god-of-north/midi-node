@@ -5,18 +5,14 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "Button 1 Pressed",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "shift",
+                    "shift_number": 1,
+                    "active": true
                 },
                 "ButtonEvent.RELEASE": {
-                    "type": "info",
-                    "info": "Button 1 Released",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "shift",
+                    "shift_number": 1,
+                    "active": false
                 },
                 "ButtonEvent.TAP": {
                     "type": "info",
@@ -59,11 +55,22 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "info",
-                    "info": "Button 2 Pressed",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "shift_selector",
+                    "branches": [
+                        {
+                            "shift_number": 1,
+                            "action": {
+                                "type": "info",
+                                "info": "InfoFFFF",
+                                "line": 2,
+                                "clear_scr": false,
+                                "align": "CENTER"
+                            }
+                        }
+                    ],
+                    "default_action": {
+                        "type": "empty"
+                    }
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "info",
