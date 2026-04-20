@@ -10,6 +10,7 @@ from .preset_action_settings_state import PresetActionSettingsState
 from .bank_action_selector_state import BankActionSelectorState
 from .bank_action_settings_state import BankActionSettingsState
 from .shutdown_state import ShutdownState
+from .wifi_settings_state import WifiSettingsState
 from core.device_event import EventType
 from controls import Control
 
@@ -39,6 +40,7 @@ class SettingsMenuState(MenuState):
             "Setup Button 4": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_4}},
             "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
+            "WiFi": {"class": WifiSettingsState},
             "System Config": {"class": SystemConfigState},
             "Shutdown": {"class": ShutdownState},
             "Back to Live Mode": None

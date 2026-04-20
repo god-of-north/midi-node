@@ -22,6 +22,8 @@ from .menu_state import MenuState
 from .save_preset_state import SavePresetState
 from .settings_menu_state import SettingsMenuState
 from .shutdown_state import ShutdownState
+from .wifi_password_state import WifiPasswordState
+from .wifi_settings_state import WifiSettingsState
 from .string_creator_state import StringCreatorState
 from .save_bank_state import SaveBankState
 
@@ -50,5 +52,7 @@ __all__ = [
     "SettingsMenuState",
     "ShutdownState",
     "StringCreatorState",
+    "WifiPasswordState",
+    "WifiSettingsState",
     "SaveBankState"
 ]
