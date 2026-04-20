@@ -5,7 +5,6 @@
 - MIDI input [map to action]
 - Delayed action
 - Tremolo/Slicer action
-- WiFi settings (connect/disconnect)
 - Bluetooth MIDI
 - Network MIDI
 - Receive MIDI and route
@@ -46,6 +45,21 @@ python -m pyftpdlib -w --user=u --password=p
 
 # setup environmnet variables. Add /etc/profile
 export MIDI_NODE_MODE="LIVE"
+
+
+
+# SERVICE
+
+
+
+sudo systemctl daemon-reload
+sudo systemctl enable midi-node.service
+sudo systemctl start midi-node.service
+
+sudo systemctl daemon-reload
+sudo systemctl restart midi-node.service
+
+systemctl status midi-node.service
 
 
 # --------- MIDI IN/Out module ---------------

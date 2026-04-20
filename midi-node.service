@@ -1,0 +1,24 @@
+# /etc/systemd/system/midi-node.service
+
+[Unit]
+Description=MIDI Node Application
+# Wait for the data partition to be mounted and ready
+#After=mnt-data.mount
+#Requires=mnt-data.mount
+
+[Service]
+# Point directly to the python executable inside your venv
+ExecStart=/home/max/test/test/bin/python3 -u main.py
+WorkingDirectory=/home/max/test/midi-node-py
+User=max
+Group=max
+
+# Environment variables
+Environment=PYTHONUNBUFFERED=1
+
+# Restart logic for robustness
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
