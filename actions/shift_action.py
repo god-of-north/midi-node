@@ -26,4 +26,4 @@ class ShiftAction(Action):
         n = self.params["shift_number"].value
         on = self.params["active"].value
         self.context.set_shift_flag(n, on)
-        self.context.show_info(f"Shift {n} {'ON' if on else 'OFF'}")
+        # self.context.show_info(f"Shift {n} {'ON' if on else 'OFF'}")

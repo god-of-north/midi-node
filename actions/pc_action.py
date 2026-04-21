@@ -12,7 +12,7 @@ class PCAction(MIDIAction):
         self.params["pc"] = ActionParam("pc", int, pc, default=0, options={"min_value":0, "max_value":127, "header":"Program Change"})
 
     def execute(self, **kwargs):
-        self.context.show_info(f"MIDI PC {self.params['pc'].value}")
+        # self.context.show_info(f"MIDI PC {self.params['pc'].value}")
         self.context.send_pc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["pc"].value)
 
 
@@ -62,6 +62,6 @@ class ChangePCAction(MIDIAction):
                 next_pc_index = min_pc if style == ChangePCStyle.END_TO_END else max_pc
         self.change_slots[slot] = next_pc_index
 
-        self.context.show_info(f"Change PC Slot {slot} {'Next' if direction == ChangePCDirection.NEXT else 'Previous'}: {next_pc_index}")
+        # self.context.show_info(f"Change PC Slot {slot} {'Next' if direction == ChangePCDirection.NEXT else 'Previous'}: {next_pc_index}")
         self.context.send_pc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, next_pc_index)
 

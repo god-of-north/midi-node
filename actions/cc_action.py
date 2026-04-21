@@ -12,7 +12,7 @@ class CCAction(MIDIAction):
         self.params["value"] = ActionParam("value", int, value, default=127, options={"min_value":0, "max_value":127, "header":"CC Value"})
 
     def execute(self, **kwargs):
-        self.context.show_info(f"MIDI CC {self.params['cc'].value}:{self.params['value'].value}")
+        # self.context.show_info(f"MIDI CC {self.params['cc'].value}:{self.params['value'].value}")
         self.context.send_cc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["cc"].value, self.params["value"].value)
 
         
@@ -27,7 +27,7 @@ class LinearCCAction(MIDIAction):
         self.params["max_value"] = ActionParam("max_value", int, max_value, default=127, options={"min_value":0, "max_value":127, "header":"Max Value"})
 
     def execute(self, value, **kwargs):
-        self.context.show_info(f"MIDI CC {self.params['cc'].value}")
+        # self.context.show_info(f"MIDI CC {self.params['cc'].value}")
         value = self._map(value, 0, 127, self.params["min_value"].value, self.params["max_value"].value)
         self.context.send_cc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["cc"].value, value)
 
@@ -45,7 +45,7 @@ class ExponentialCCAction(LinearCCAction):
         self.params["exponent"] = ActionParam("exponent", float, exponent, default=2.0, options={"min_value":1.0, "max_value":5.0, "header":"Exponent"})
 
     def execute(self, value, **kwargs):
-        self.context.show_info(f"MIDI CC {self.params['cc'].value}")
+        # self.context.show_info(f"MIDI CC {self.params['cc'].value}")
         value = self._map(value, 0, 127, self.params["min_value"].value, self.params["max_value"].value)
         value = self._exponential_map(value, self.params["exponent"].value)
         self.context.send_cc(self.params["output"].value, self.params["port_name"].value, self.params["channel"].value, self.params["cc"].value, value)

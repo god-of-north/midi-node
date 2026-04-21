@@ -33,7 +33,7 @@ class ActionEditorState(MenuState):
                 # TODO: add custom value selector support
                 selector = CustomParamSelectorRegistry.get_selector(param.custom_selector)
                 if selector:
-                    transition = {"class": MenuSelectorState, "args": {"param":param.value, "items":selector.get_list(params), 
+                    transition = {"class": MenuSelectorState, "args": {"param":param.value, "items":selector.get_list(params, self.context), 
                                                                        "callback": self._update_param_callback_factory(param)}}
             elif param.param_type == bool:
                 transition = {"class": ActionParamBoolSelectorState, "args": {"param":param}}

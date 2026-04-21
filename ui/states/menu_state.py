@@ -23,9 +23,9 @@ class MenuState(DeviceState):
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_CW:
-            self._up()
-        elif event.type == EventType.ENCODER_CCW:
             self._down()
+        elif event.type == EventType.ENCODER_CCW:
+            self._up()
         elif event.type == EventType.ENCODER_SELECT:
             self.return_to_previous()
 

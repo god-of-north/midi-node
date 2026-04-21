@@ -41,8 +41,6 @@ class MidiNodeDevice:
                 Control.BUTTON_2: '2',
                 Control.BUTTON_3: '3',
                 Control.BUTTON_4: '4',
-                Control.BUTTON_5: '5',
-                Control.BUTTON_6: '6',
             }
 
             for control, button in default_key_map.items():
@@ -58,9 +56,9 @@ class MidiNodeDevice:
 
             def encoder_callback(direction):
                 if direction == 1:
-                    self.event_queue.put(DeviceEvent(EventType.ENCODER_CW))
-                else:
                     self.event_queue.put(DeviceEvent(EventType.ENCODER_CCW))
+                else:
+                    self.event_queue.put(DeviceEvent(EventType.ENCODER_CW))
 
             keyboard_input_handler.add_encoder("down", "up", encoder_callback)
             keyboard_input_handler.add_button("enter", {

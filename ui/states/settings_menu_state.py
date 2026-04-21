@@ -38,6 +38,8 @@ class SettingsMenuState(MenuState):
             "Setup Button 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_2}},
             "Setup Button 3": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_3}},
             "Setup Button 4": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_4}},
+            "Setup Button 5": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_5}},
+            "Setup Button 6": {"class": ControlSettingsMenuState, "args": {"control_id": Control.BUTTON_6}},
             "Setup Exp Pedal 1": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_1}},
             "Setup Exp Pedal 2": {"class": ControlSettingsMenuState, "args": {"control_id": Control.EXP_PEDAL_2}},
             "WiFi": {"class": WifiSettingsState},
