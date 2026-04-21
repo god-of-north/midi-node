@@ -83,10 +83,12 @@ class GPIOInputHandler(InputHandler):
     def setup_gpio(self):
         """Initializes the gpiod lines after all buttons and encoders are added."""
         configs = {}
+        button_bias = Bias.PULL_UP if self.config.buttons_active_low else Bias.PULL_DOWN
         for pin in self.all_pins:
+            bias = button_bias if pin in self.buttons else Bias.PULL_UP
             configs[pin] = gpiod.LineSettings(
                 direction=Direction.INPUT,
-                bias=Bias.PULL_UP,
+                bias=bias,
                 edge_detection=Edge.BOTH,
                 debounce_period=timedelta(milliseconds=5) 
             )
@@ -136,12 +138,17 @@ class GPIOInputHandler(InputHandler):
         now = time.time()
 
         # gpiod v2 uses EdgeEvent.Type for event.event_type
-        if event.event_type == EdgeEvent.Type.FALLING_EDGE:  # Press (Active Low)
+        if self.config.buttons_active_low:
+            press_edge, release_edge = EdgeEvent.Type.FALLING_EDGE, EdgeEvent.Type.RISING_EDGE
+        else:
+            press_edge, release_edge = EdgeEvent.Type.RISING_EDGE, EdgeEvent.Type.FALLING_EDGE
+
+        if event.event_type == press_edge:
             data["press_timestamp"] = now
             data["long_press_fired"] = False
             self._fire(data, ButtonEvent.PRESS)
         
-        elif event.event_type == EdgeEvent.Type.RISING_EDGE:  # Release
+        elif event.event_type == release_edge:
             if data["press_timestamp"]:
                 duration = now - data["press_timestamp"]
                 self._fire(data, ButtonEvent.RELEASE)

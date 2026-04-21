@@ -149,6 +149,13 @@ class SystemConfigState(MenuState):
             "max_value": 5000
         }}
 
+        self.transitions["BTN:Active Low"] = {"class": BooleanWithCallbackState, "args": {
+            "value": self.context.data.config.buttons_active_low,
+            "callback": self._update_buttons_active_low,
+            "true_value": "Active Low",
+            "false_value": "Active High"
+        }}
+
         self.transitions["Input Poll Interval"] = {"class": IntSelectorState, "args": {
             "value": int(self.context.data.config.input_poll_interval*1000),
             "callback": self._update_input_poll_interval,
@@ -208,6 +215,10 @@ class SystemConfigState(MenuState):
 
     def _update_buttons_long_press_time(self, value: int):
         self.context.data.config.buttons_long_press_time = value / 1000.0
+        self.context.data.save_app_config()
+
+    def _update_buttons_active_low(self, value: bool):
+        self.context.data.config.buttons_active_low = value
         self.context.data.save_app_config()
 
     def _update_input_poll_interval(self, value: int):

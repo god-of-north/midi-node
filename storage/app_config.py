@@ -48,6 +48,8 @@ class AppConfig:
     def __init__(self):
         self.buttons_tap_time = 0.25
         self.buttons_long_press_time = 0.6
+        # GPIO: True = switch to GND (idle high, pull-up); False = switch to VCC (idle low, pull-down).
+        self.buttons_active_low = True
         self.ads1115_address = 0x48
         self.ads1115_gain = 1
         self.ads1115_pot_threshold = 200 # raw value change
@@ -65,6 +67,7 @@ class AppConfig:
         return {
             "buttons_tap_time": self.buttons_tap_time,
             "buttons_long_press_time": self.buttons_long_press_time,
+            "buttons_active_low": self.buttons_active_low,
             "ads1115_address": self.ads1115_address,
             "ads1115_gain": self.ads1115_gain,
             "ads1115_pot_threshold": self.ads1115_pot_threshold,
@@ -83,6 +86,7 @@ class AppConfig:
         instance = cls()
         instance.buttons_tap_time = data.get("buttons_tap_time", 0.25)
         instance.buttons_long_press_time = data.get("buttons_long_press_time", 0.6)
+        instance.buttons_active_low = data.get("buttons_active_low", True)
         instance.ads1115_address = data.get("ads1115_address", 0x48)
         instance.ads1115_gain = data.get("ads1115_gain", 1)
         instance.ads1115_pot_threshold = data.get("ads1115_pot_threshold", 200)
