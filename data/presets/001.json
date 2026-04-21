@@ -1,18 +1,48 @@
 {
-    "name": "Alt Preset",
+    "name": "Mysterya 1",
     "controls": {
         "Control.BUTTON_1": {
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "pc",
-                    "channel": 1,
-                    "output": "UART",
-                    "port_name": "/dev/serial0",
-                    "pc": 1
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "cc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "cc": 1,
+                            "value": 127
+                        },
+                        {
+                            "type": "info",
+                            "info": "> S-BEND <",
+                            "line": 3,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
                 },
                 "ButtonEvent.RELEASE": {
-                    "type": "empty"
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "cc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "cc": 1,
+                            "value": 0
+                        },
+                        {
+                            "type": "info",
+                            "info": "S-BEND release",
+                            "line": 3,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
                 },
                 "ButtonEvent.TAP": {
                     "type": "empty"
@@ -35,11 +65,23 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "pc",
-                    "channel": 1,
-                    "output": "UART",
-                    "port_name": "/dev/serial0",
-                    "pc": 2
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "pc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "pc": 0
+                        },
+                        {
+                            "type": "info",
+                            "info": "> DRIVE <",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"
@@ -65,11 +107,23 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "pc",
-                    "channel": 1,
-                    "output": "UART",
-                    "port_name": "/dev/serial0",
-                    "pc": 3
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "pc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "pc": 3
+                        },
+                        {
+                            "type": "info",
+                            "info": "> CLEAN FX <",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"
@@ -95,11 +149,107 @@
             "control_type": "ControlType.BUTTON",
             "actions": {
                 "ButtonEvent.PRESS": {
-                    "type": "pc",
-                    "channel": 1,
-                    "output": "UART",
-                    "port_name": "/dev/serial0",
-                    "pc": 4
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "pc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "pc": 1
+                        },
+                        {
+                            "type": "info",
+                            "info": "> SLAP <",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
+                },
+                "ButtonEvent.RELEASE": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "empty"
+                }
+            }
+        },
+        "Control.BUTTON_5": {
+            "control_type": "ControlType.BUTTON",
+            "actions": {
+                "ButtonEvent.PRESS": {
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "pc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "pc": 2
+                        },
+                        {
+                            "type": "info",
+                            "info": "> CLEAN <",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
+                },
+                "ButtonEvent.RELEASE": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.DOUBLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.TRIPLE_TAP": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS": {
+                    "type": "empty"
+                },
+                "ButtonEvent.LONG_PRESS_RELEASE": {
+                    "type": "empty"
+                }
+            }
+        },
+        "Control.BUTTON_6": {
+            "control_type": "ControlType.BUTTON",
+            "actions": {
+                "ButtonEvent.PRESS": {
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "pc",
+                            "channel": 0,
+                            "output": "UART",
+                            "port_name": "/dev/serial0",
+                            "pc": 15
+                        },
+                        {
+                            "type": "info",
+                            "info": "> QUIET <",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
                 },
                 "ButtonEvent.RELEASE": {
                     "type": "empty"
@@ -125,11 +275,7 @@
             "control_type": "ControlType.POTENTIOMETER",
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
-                    "type": "info",
-                    "info": "Exp-1 [__value__]",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "empty"
                 },
                 "PotEvent.ON_MIN": {
                     "type": "empty"
@@ -155,11 +301,7 @@
             "control_type": "ControlType.POTENTIOMETER",
             "actions": {
                 "PotEvent.CHANGE_VALUE": {
-                    "type": "info",
-                    "info": "Exp-2 [__value__]",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "empty"
                 },
                 "PotEvent.ON_MIN": {
                     "type": "empty"
@@ -183,9 +325,14 @@
         }
     },
     "enter_action": {
-        "type": "empty"
+        "type": "info",
+        "info": "PRESET: Mysterya 1",
+        "line": 1,
+        "clear_scr": true,
+        "align": "CENTER"
     },
     "exit_action": {
         "type": "empty"
-    }
+    },
+    "input_midi_rules": []
 }

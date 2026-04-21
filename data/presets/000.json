@@ -15,11 +15,23 @@
                     "active": false
                 },
                 "ButtonEvent.TAP": {
-                    "type": "info",
-                    "info": "Button 1 TAP",
-                    "line": 2,
-                    "clear_scr": false,
-                    "align": "CENTER"
+                    "type": "composite",
+                    "actions": [
+                        {
+                            "type": "info",
+                            "info": "Info",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        },
+                        {
+                            "type": "info",
+                            "info": "Info",
+                            "line": 2,
+                            "clear_scr": false,
+                            "align": "CENTER"
+                        }
+                    ]
                 },
                 "ButtonEvent.DOUBLE_TAP": {
                     "type": "info",
