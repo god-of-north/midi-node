@@ -1,7 +1,13 @@
 from .menu_state import MenuState
 from .list_item_creator_state import ListItemCreatorState
+from .list_ordering_state import ListOrderingState
 from core.device_event import EventType
 from actions import ActionParam
+
+
+def _list_param_row_label(index: int, item) -> str:
+    return f"{index+1}:{item!s}"
+
 
 class ActionParamListEditorState(MenuState):
     def __init__(self, context, param: ActionParam):
@@ -21,7 +27,7 @@ class ActionParamListEditorState(MenuState):
             item_editor_cls = item_editor_cls()
         for idx, item in enumerate(self.param.value):
             delete_cb = lambda i=item: self.param.value.remove(i)
-            label = f"{idx+1}:{item!s}"
+            label = _list_param_row_label(idx, item)
             if item_editor_cls:
                 self.transitions[label] = {
                     "class": item_editor_cls,
@@ -32,6 +38,14 @@ class ActionParamListEditorState(MenuState):
                     "class": ActionEditorState,
                     "args": {"action": item, "delete_callback": delete_cb},
                 }
+        if len(self.param.value) >= 2:
+            self.transitions["Reorder"] = {
+                "class": ListOrderingState,
+                "args": {
+                    "sequence": self.param.value,
+                    "format_line": _list_param_row_label,
+                },
+            }
         self.transitions["Add Item"] = {"class": ListItemCreatorState, "args": {"items": self.creator_items, "item_add_func": self._add_item}}
         self.transitions["Back"] = None
         self.items = list(self.transitions.keys())
