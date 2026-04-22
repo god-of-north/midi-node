@@ -37,6 +37,7 @@ class DataContext:
         self.current_preset_index = self.storage.load_current_preset_index()
         self.max_preset_index = len(self.preset_list) - 1
         self.shift_flags: dict[int, bool] = {}
+        self.settings_menu_locked: bool = False
 
         if self.current_bank_index is not None:
             self.bank = self.storage.load_bank(self.current_bank_index) 
@@ -106,6 +107,12 @@ class DataContext:
 
     def get_shift_flag(self, shift_number: int) -> bool:
         return self.shift_flags.get(shift_number, False)
+
+    def set_settings_menu_locked(self, locked: bool) -> None:
+        self.settings_menu_locked = locked
+
+    def get_settings_menu_locked(self) -> bool:
+        return self.settings_menu_locked
 
     def next_preset(self, stop_at_end: bool = False):
         current_index_in_bank = 0
@@ -301,6 +308,12 @@ class DeviceContext:
 
     def get_shift_flag(self, shift_number: int) -> bool:
         return self.data.get_shift_flag(shift_number)
+
+    def set_settings_menu_locked(self, locked: bool) -> None:
+        self.data.set_settings_menu_locked(locked)
+
+    def get_settings_menu_locked(self) -> bool:
+        return self.data.get_settings_menu_locked()
 
     def shutdown_device(self) -> None:
         """Halt the host immediately (Raspberry Pi / Linux). No-op in simulation mode."""

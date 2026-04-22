@@ -6,11 +6,18 @@ from core.device_event import EventType
 class HomeState(DeviceState):
     def on_enter(self):
         self.context.ui.clear_ui()
-        self.context.ui.write_ui("LIVE MODE\r\n\r\n\r\n[Select] to Setup", 0, 0, True)
+        if self.context.get_settings_menu_locked():
+            bottom = "Setup (locked)"
+        else:
+            bottom = "[Select] to Setup"
+        self.context.ui.write_ui(f"LIVE MODE\r\n\r\n\r\n{bottom}", 0, 0, True)
 
     def handle_event(self, event):
         if event.type == EventType.ENCODER_SELECT:
-            self.transition_to(SettingsMenuState)
+            if self.context.get_settings_menu_locked():
+                self.context.show_info("Setup locked", line=3, clear_screen=False)
+            else:
+                self.transition_to(SettingsMenuState)
         elif event.type == EventType.INFO_MESSAGE:
             info = event.data.get("info", "")
             line = event.data.get("line", 2)-1
