@@ -48,9 +48,7 @@ export MIDI_NODE_MODE="LIVE"
 
 
 
-# SERVICE
-
-
+# --------- SERVICE -----------
 
 sudo systemctl daemon-reload
 sudo systemctl enable midi-node.service
@@ -62,29 +60,7 @@ sudo systemctl restart midi-node.service
 systemctl status midi-node.service
 
 
-# --------- MIDI IN/Out module ---------------
-
-A02 - GND
-A03 - To MicroController UART_TX (D9 - AltSerial(ArduinoNano)/GPOI14 - RPI Zero 2W)
-A04 - To MIDI External Device UART_RX 
-A05 - +5V
-
-K03 - GND
-K04 - To MIDI External Device UART_RX
-K05 - +5V
-
----------------------
-
-B02 - GND
-B04 - To MicroController RX
-B05 - +5V
-
-N03 - MIDI IN
-N04 - MIDI IN
-
----------------------
-
-MIDI TRS (Type A)
+# ----------- MIDI TRS (Type A) -------------
 Tip - Data (Sink, MIDI Pin 5)
 Ring - VCC (Source, MIDI Pin 4)
 Sleeve - GND (Shield, MIDI Pin 2)
